@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Asset & Rental Management System - แผนกไอที</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-laptop-code"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>IT Asset Hub</h1>
+                    <span>Rental & Tracking</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>แดชบอร์ดหลัก</span>
+                </button>
+                <button class="nav-item" data-target="assets">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>คลังคอมพิวเตอร์</span>
+                </button>
+                <button class="nav-item" data-target="scanner" id="nav-scanner-btn">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>สแกน QR Code</span>
+                    <span class="badge pulse">สแกน</span>
+                </button>
+                <button class="nav-item" data-target="transactions">
+                    <i class="fa-solid fa-history"></i>
+                    <span>ประวัติทำรายการ</span>
+                </button>
+            </nav>
+            
+            <div class="user-profile">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Wachira" alt="IT Admin Avatar" class="avatar">
+                <div class="user-info">
+                    <span class="user-name">Wachira Y.</span>
+                    <span class="user-role">Senior IT Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="main-header">
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="global-search" placeholder="ค้นหา Asset Tag, S/N, รุ่นคอมพิวเตอร์, หรือชื่อผู้ยืม...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="header-add-asset-btn">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>เพิ่มอุปกรณ์</span>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" id="quick-scan-btn" title="สแกน QR Code ด่วน">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </button>
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button class="btn btn-secondary btn-icon" id="header-notification-btn" title="การแจ้งเตือน">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="badge badge-danger notification-badge" id="notification-badge" style="display: none; position: absolute; top: -5px; right: -5px; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%;">0</span>
+                        </button>
+                        <!-- Dropdown -->
+                        <div class="notification-dropdown glass" id="notification-dropdown" style="display: none; position: absolute; top: 120%; right: 0; width: 340px; z-index: 1000; border: 1px solid var(--border-glass); border-radius: var(--radius-md); box-shadow: var(--shadow-premium); background: var(--bg-sidebar); backdrop-filter: blur(20px);">
+                            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-glass); font-weight: 600; font-family: var(--font-heading); display: flex; justify-content: space-between; align-items: center;">
+                                <span>การแจ้งเตือนล่าสุด</span>
+                                <button id="clear-notifications-btn" style="background:none; border:none; color:var(--color-primary); cursor:pointer; font-size:0.8rem; font-family:var(--font-body);">ล้างทั้งหมด</button>
+                            </div>
+                            <div class="notification-list" id="notification-list" style="max-height: 350px; overflow-y: auto;">
+                                <div style="padding: 24px; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;" id="notification-empty">ไม่มีการแจ้งเตือนใหม่</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-logout" id="logout-btn" title="ออกจากระบบ">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>ออกระบบ</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Windows (Tab Contents) -->
+            <div class="tab-wrapper">
+                <!-- 1. DASHBOARD WINDOW -->
+                <section class="tab-content active" id="dashboard">
+                    <h2 class="section-title">ภาพรวมระบบ Real-time</h2>
+                    
+                    <!-- KPI Grid -->
+                    <div class="kpi-grid">
+                        <!-- KPI 1: Ready for Deployment (Permanent) -->
+                        <div class="kpi-card glass primary-glow">
+                            <div class="kpi-header">
+                                <span class="kpi-title">เครื่องว่างพร้อมจ่ายถาวร</span>
+                                <div class="kpi-icon">
+                                    <i class="fa-solid fa-box"></i>
+                                </div>
+                            </div>
+                            <div class="kpi-value" id="kpi-deployment-ready">0</div>
+                            <div class="kpi-footer">
+                                <span class="kpi-trend trend-neutral"><i class="fa-solid fa-circle-info"></i> สำหรับพนักงานใหม่ / เปลี่ยนเครื่อง</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: Available Rentals (Short-term) -->
+                        <div class="kpi-card glass success-glow" id="kpi-card-rental-available" style="cursor: pointer;">
+                            <div class="kpi-header">
+                                <span class="kpi-title">เครื่องว่างพร้อมให้ยืมชั่วคราว</span>
+                                <div class="kpi-icon">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                            </div>
+                            <div class="kpi-value" id="kpi-rental-available">0</div>
+                            <div class="kpi-footer">
+                                <span class="kpi-trend trend-success"><i class="fa-solid fa-arrows-spin"></i> พร้อมทำรายการยืม-คืนทันที</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: Rented Assets -->
+                        <div class="kpi-card glass warning-glow">
+                            <div class="kpi-header">
+                                <span class="kpi-title">เครื่องที่ถูกยืมอยู่ในขณะนี้</span>
+                                <div class="kpi-icon">
+                                    <i class="fa-solid fa-hand-holding-hand"></i>
+                                </div>
+                            </div>
+                            <div class="kpi-value" id="kpi-rental-rented">0</div>
+                            <div class="kpi-footer">
+                                <span class="kpi-trend trend-warning"><i class="fa-solid fa-calendar-days"></i> กำลังรอส่งมอบคืนตามกำหนด</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Sub-Section Layout (Split Screen) -->
+                    <div class="dashboard-details">
+                        <!-- Active Rentals Tracker Table -->
+                        <div class="panel glass">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-hourglass-half"></i> รายการเครื่องที่กำลังถูกยืม (Active Rentals Tracker)</h3>
+                                <span class="badge badge-warning" id="active-rentals-count">0 เครื่อง</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="custom-table" id="active-rentals-table">
+                                    <thead>
+                                        <tr>
+                                            <th>รหัสทรัพย์สิน (Asset Tag)</th>
+                                            <th>รุ่น / รายละเอียด</th>
+                                            <th>ผู้ยืม (แผนก)</th>
+                                            <th>วันที่ยืม</th>
+                                            <th>กำหนดส่งคืน</th>
+                                            <th style="width: 120px;">การดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="active-rentals-tbody">
+                                        <!-- Dynamic Data Insertion -->
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. ASSETS LIST WINDOW -->
+                <section class="tab-content" id="assets">
+                    <div class="section-header">
+                        <h2 class="section-title">รายการทรัพย์สินและอุปกรณ์ทั้งหมด</h2>
+                        <div class="filter-bar">
+                            <select id="filter-usage-type" class="glass-select">
+                                <option value="all">ประเภทการใช้งานทั้งหมด</option>
+                                <option value="Deployment">จ่ายถาวร (Deployment)</option>
+                                <option value="Rental">ยืมชั่วคราว (Rental)</option>
+                            </select>
+                            <select id="filter-status" class="glass-select">
+                                <option value="all">สถานะทั้งหมด</option>
+                                <option value="Available">ว่างพร้อมใช้งาน (Available)</option>
+                                <option value="Rented">ถูกยืมใช้งานอยู่ (Rented)</option>
+                                <option value="Assigned">ส่งมอบถาวรแล้ว (Assigned)</option>
+                                <option value="Maintenance">ซ่อมบำรุง (Maintenance)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Assets Grid / Table -->
+                    <div class="panel glass">
+                        <div class="table-container">
+                            <table class="custom-table" id="assets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Asset Tag</th>
+                                        <th>Serial Number</th>
+                                        <th>รุ่นคอมพิวเตอร์ / สเปก</th>
+                                        <th>ประเภทสินค้า</th>
+                                        <th>ประเภทการจัดสรร</th>
+                                        <th>สถานะปัจจุบัน</th>
+                                        <th style="width: 150px; text-align: center;">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assets-tbody">
+                                    <!-- Dynamic Data Insertion -->
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. QR SCANNER & SIMULATOR WINDOW -->
+                <section class="tab-content" id="scanner">
+                    <h2 class="section-title">สแกน QR Code อุปกรณ์ไอที</h2>
+                    
+                    <div class="scanner-layout">
+                        <!-- Left Side: Real Camera QR Scanner -->
+                        <div class="panel glass scanner-camera-panel">
+                            <h3><i class="fa-solid fa-camera"></i> สแกนด้วยกล้องจริง (Webcam / Mobile Camera)</h3>
+                            <p class="panel-subtitle text-muted">หันกล้องไปสแกนป้าย QR Code ที่ติดบนอุปกรณ์คอมพิวเตอร์เพื่อเปิดแบบฟอร์ม</p>
+                            
+                            <div class="camera-box-wrapper">
+                                <div id="qr-reader"></div>
+                                <div class="scanner-laser-line"></div>
+                            </div>
+                            
+                            <div class="scanner-controls">
+                                <button class="btn btn-primary btn-full" id="start-camera-btn">
+                                    <i class="fa-solid fa-play"></i> เปิดกล้องสแกน
+                                </button>
+                                <button class="btn btn-secondary btn-full hidden" id="stop-camera-btn">
+                                    <i class="fa-solid fa-stop"></i> ปิดกล้อง
+                                </button>
+                            </div>
+                            <div id="camera-scan-result" class="text-center text-success font-semibold margin-top-md"></div>
+                        </div>
+
+                        <!-- Right Side: Smart Scanner Simulator -->
+                        <div class="panel glass scanner-simulator-panel">
+                            <h3><i class="fa-solid fa-laptop-code"></i> Scanner Gun QR Code </h3>
+                            <p class="panel-subtitle text-muted">สำหรับทดลองสแกนบนเครื่องที่ไม่มีกล้องเว็บแคม หรือเพื่อการนำเสนอ</p>
+                            
+                            <div class="simulator-box">
+                                <!-- Scanner Gun (Keyboard Wedge) Input -->
+                                <div class="form-group margin-top-md">
+                                    <label for="scanner-gun-input">ช่องป้อนจากปืนสแกน (Scanner Gun / Keyboard Wedge)</label>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="text" id="scanner-gun-input" class="glass-input" placeholder="ยิง QR ด้วยปืนสแกนที่นี่ แล้วกด Enter หรือกดปุ่มส่ง" autocomplete="off" />
+                                        <button class="btn btn-primary" id="scanner-gun-submit"><i class="fa-solid fa-paper-plane"></i> ส่ง</button>
+                                    </div>
+                                    <p class="text-muted" style="font-size:0.85rem; margin-top:6px;">หมายเหตุ: ปืนสแกนที่ตั้งค่าเป็น Keyboard Wedge จะพิมพ์ Asset Tag แล้วส่ง Enter อัตโนมัติได้</p>
+                                </div>
+                            </div>
+
+                            <div class="instruction-box margin-top-lg">
+                                <h4>คำแนะนำในการทำงาน:</h4>
+                                <ul>
+                                    <li>สแกนเครื่องสถานะ <strong>Available (ยืมชั่วคราว - ว่าง)</strong> -> จะเปิดหน้าทำรายการ <strong>"ขอยืมคอมพิวเตอร์"</strong> โดยอัตโนมัติ</li>
+                                    <li>สแกนเครื่องสถานะ <strong>Rented (กำลังยืมอยู่)</strong> -> จะเปิดหน้าทำรายการ <strong>"ส่งคืนคอมพิวเตอร์"</strong> โดยอัตโนมัติ</li>
+                                    <li>สแกนเครื่องที่ถูกจ่ายถาวร (Deployment) หรือสถานะอื่นๆ -> จะแสดงประวัติการใช้งานและรายละเอียดของอุปกรณ์เครื่องนั้นๆ</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. TRANSACTIONS LOG WINDOW -->
+                <section class="tab-content" id="transactions">
+                    <h2 class="section-title">ประวัติการทำรายการยืม-คืนเครื่องทั้งหมด</h2>
+                    
+                    <div class="panel glass">
+                        <div class="table-container">
+                            <table class="custom-table" id="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>วันเวลาทำรายการ</th>
+                                        <th>Asset Tag / รุ่น</th>
+                                        <th>พนักงานผู้ยืม (แผนก)</th>
+                                        <th>ผู้บันทึกยืม</th>
+                                        <th>กำหนดส่งคืน</th>
+                                        <th>วันที่คืนจริง</th>
+                                        <th>ผู้รับคืน</th>
+                                        <th>สภาพตัวเครื่อง</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-tbody">
+                                    <!-- Dynamic Data Insertion -->
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS & FORMS ================= -->
+
+    <!-- MODAL 1: ADD ASSET MODAL -->
+    <div class="modal-overlay" id="add-asset-modal">
+        <div class="modal-box glass">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-circle"></i> เพิ่มอุปกรณ์คอมพิวเตอร์เข้าระบบ</h3>
+                <button class="modal-close-btn" data-close="add-asset-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="add-asset-form">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="asset-tag">Asset Tag / รหัสทรัพย์สิน <span class="required">*</span></label>
+                            <input type="text" id="asset-tag" placeholder="เช่น IT-ASSET-0100" required class="glass-input">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="serial-number">Serial Number (S/N) <span class="required">*</span></label>
+                            <input type="text" id="serial-number" placeholder="จากผู้ผลิตสินค้า" required class="glass-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="model-name">ชื่อรุ่นคอมพิวเตอร์ / รายละเอียดสเปก <span class="required">*</span></label>
+                        <input type="text" id="model-name" placeholder="เช่น Lenovo ThinkPad L14 Gen 4 (AMD Ryzen 5, 16GB)" required class="glass-input">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="category">หมวดหมู่สินค้า <span class="required">*</span></label>
+                            <select id="category" class="glass-input" required>
+                                <option value="Laptop">Laptop / Notebook</option>
+                                <option value="Desktop">Desktop PC</option>
+                                <option value="Workstation">High-end Workstation</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="usage-type">ประเภทการจัดสรรการใช้งาน <span class="required">*</span></label>
+                            <select id="usage-type" class="glass-input" required>
+                                <option value="Rental">สำหรับให้ยืมชั่วคราว (Rental)</option>
+                                <option value="Deployment">จ่ายถาวรพนักงานใหม่ (Deployment)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="initial-status">สถานะตั้งต้น <span class="required">*</span></label>
+                        <select id="initial-status" class="glass-input" required>
+                            <option value="Available">ว่างพร้อมใช้งาน (Available)</option>
+                            <option value="Maintenance">ซ่อมบำรุง (Maintenance)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close="add-asset-modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกข้อมูลเครื่อง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ASSET DETAIL & QR MODAL -->
+    <div class="modal-overlay" id="asset-detail-modal">
+        <div class="modal-box glass detail-modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info"></i> รายละเอียดอุปกรณ์ไอทีและ QR Code</h3>
+                <button class="modal-close-btn" data-close="asset-detail-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body detail-modal-body">
+                <div class="detail-split">
+                    <!-- Column 1: QR Display & Download -->
+                    <div class="detail-qr-section">
+                        <div id="qrcode-container" class="qrcode-wrapper">
+                            <!-- JS Dynamic QR Code Creation -->
+                        </div>
+                        <p class="qrcode-label" id="detail-qr-tag">IT-ASSET-0000</p>
+                        <button class="btn btn-secondary btn-small" id="print-qr-btn">
+                            <i class="fa-solid fa-print"></i> พิมพ์ QR สำหรับติดตัวเครื่อง
+                        </button>
+                    </div>
+
+                    <!-- Column 2: Tech Specs & Real-time Status -->
+                    <div class="detail-info-section">
+                        <h4 id="detail-model-name">Lenovo ThinkPad X1 Carbon</h4>
+                        <div class="detail-badge-group">
+                            <span class="status-badge" id="detail-status-badge">Available</span>
+                            <span class="type-badge" id="detail-type-badge">Rental</span>
+                        </div>
+                        
+                        <ul class="specs-list">
+                            <li><strong>Asset Tag:</strong> <span id="detail-asset-tag">-</span></li>
+                            <li><strong>Serial Number:</strong> <span id="detail-sn">-</span></li>
+                            <li><strong>หมวดหมู่:</strong> <span id="detail-category">-</span></li>
+                            <li><strong>ลงทะเบียนเมื่อ:</strong> <span id="detail-registered-date">-</span></li>
+                        </ul>
+
+                        <div id="detail-edit-section" class="detail-edit-section" style="display:none; margin-top: 20px;">
+                            <input type="hidden" id="detail-asset-id">
+                            <input type="hidden" id="detail-active-transaction-id">
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="detail-asset-tag-input">Asset Tag</label>
+                                    <input id="detail-asset-tag-input" class="glass-input" type="text">
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="detail-serial-number-input">Serial Number</label>
+                                    <input id="detail-serial-number-input" class="glass-input" type="text">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="detail-model-name-input">รุ่นคอมพิวเตอร์ / สเปก</label>
+                                <input id="detail-model-name-input" class="glass-input" type="text">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="detail-category-input">หมวดหมู่</label>
+                                    <select id="detail-category-input" class="glass-input">
+                                        <option value="Laptop">Laptop / Notebook</option>
+                                        <option value="Desktop">Desktop PC</option>
+                                        <option value="Workstation">High-end Workstation</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="detail-usage-type-input">ประเภทการจัดสรร</label>
+                                    <select id="detail-usage-type-input" class="glass-input">
+                                        <option value="Rental">ยืมชั่วคราว (Rental)</option>
+                                        <option value="Deployment">จ่ายถาวร (Deployment)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="detail-status-input">สถานะ</label>
+                                <select id="detail-status-input" class="glass-input">
+                                    <option value="Available">ว่างพร้อมใช้งาน (Available)</option>
+                                    <option value="Rented">ถูกยืมใช้งานอยู่ (Rented)</option>
+                                    <option value="Assigned">ส่งมอบถาวรแล้ว (Assigned)</option>
+                                    <option value="Maintenance">ซ่อมบำรุง (Maintenance)</option>
+                                </select>
+                            </div>
+
+                            <div id="detail-borrower-edit-section" style="display:none; margin-top: 12px;">
+                                <h4>รายละเอียดผู้ยืม</h4>
+                                <div class="form-row">
+                                    <div class="form-group flex-1">
+                                        <label for="detail-borrower-name-input">ชื่อผู้ยืม</label>
+                                        <input id="detail-borrower-name-input" class="glass-input" type="text">
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <label for="detail-borrower-id-input">รหัสพนักงาน</label>
+                                        <input id="detail-borrower-id-input" class="glass-input" type="text">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group flex-1">
+                                        <label for="detail-borrower-dept-input">แผนก</label>
+                                        <select id="detail-borrower-dept-input" class="glass-input">
+                                            <option value="Human Resources">Human Resources (HR)</option>
+                                            <option value="Marketing">Marketing & Communication</option>
+                                            <option value="Sales">Sales & Business Development</option>
+                                            <option value="Software Engineer">Software Engineering (IT)</option>
+                                            <option value="Finance & Accountant">Finance & Accounting</option>
+                                            <option value="Customer Support">Customer Operations</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <label for="detail-borrower-phone-input">เบอร์ติดต่อ</label>
+                                        <input id="detail-borrower-phone-input" class="glass-input" type="tel">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row" id="detail-edit-action-row">
+                                <button type="button" class="btn btn-primary" id="detail-save-btn">บันทึกการแก้ไข</button>
+                                <button type="button" class="btn btn-secondary" id="detail-cancel-edit-btn">ยกเลิก</button>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-action-area" id="detail-action-buttons">
+                            <!-- Dynamic action button (e.g. Scan to borrow, return, or message) -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History of this Asset -->
+                <div class="detail-history-section margin-top-lg">
+                    <h4><i class="fa-solid fa-timeline"></i> ประวัติการใช้งานอุปกรณ์เครื่องนี้ (Asset Timeline)</h4>
+                    <div class="timeline-container">
+                        <ul class="timeline" id="asset-timeline-ul">
+                            <!-- Dynamic timeline items -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: BORROW ASSET FORM MODAL -->
+    <div class="modal-overlay" id="borrow-form-modal">
+        <div class="modal-box glass modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-signature"></i> แบบฟอร์มทำรายการยืมคอมพิวเตอร์ชั่วคราว</h3>
+                <button class="modal-close-btn" data-close="borrow-form-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="borrow-asset-form-element">
+                <!-- Keep asset ID in a hidden input -->
+                <input type="hidden" id="borrow-form-asset-id">
+                
+                <div class="modal-body">
+                    <div class="scanned-asset-summary glass">
+                        <i class="fa-solid fa-circle-check checked-icon"></i>
+                        <div>
+                            <h4 id="borrow-summary-model">Lenovo Thinkpad X1 Carbon</h4>
+                            <p>Asset Tag: <strong id="borrow-summary-tag">IT-ASSET-0001</strong> | S/N: <span id="borrow-summary-sn">C02FX1</span></p>
+                        </div>
+                    </div>
+
+                    <div class="form-row margin-top-md">
+                        <div class="form-group flex-1">
+                            <label for="borrower-name">ชื่อ-นามสกุล ผู้ขอขอยืมอุปกรณ์ <span class="required">*</span></label>
+                            <input type="text" id="borrower-name" placeholder="ระบุชื่อ-นามสกุลพนักงาน" required class="glass-input">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="borrower-id">รหัสพนักงานผู้ยืม <span class="required">*</span></label>
+                            <input type="text" id="borrower-id" placeholder="รหัสพนักงาน (เช่น EM-9831)" required class="glass-input">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="borrower-dept">แผนก / ฝ่าย (Department) <span class="required">*</span></label>
+                            <select id="borrower-dept" class="glass-input" required>
+                                <option value="" disabled selected>เลือกแผนก/ฝ่ายสังกัด</option>
+                                <option value="Human Resources">Human Resources (HR)</option>
+                                <option value="Marketing">Marketing & Communication</option>
+                                <option value="Sales">Sales & Business Development</option>
+                                <option value="Software Engineer">Software Engineering (IT)</option>
+                                <option value="Finance & Accountant">Finance & Accounting</option>
+                                <option value="Customer Support">Customer Operations</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="borrower-phone">เบอร์ติดต่อสำหรับติดต่อตามคืน</label>
+                            <input type="tel" id="borrower-phone" placeholder="เช่น 089-XXXXXXX" class="glass-input">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="borrow-date">วันที่ทำรายการยืม (Borrow Date) <span class="required">*</span></label>
+                            <input type="datetime-local" id="borrow-date" required class="glass-input">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="expected-return-date">กำหนดส่งมอบเครื่องคืน (Expected Due Date) <span class="required">*</span></label>
+                            <input type="date" id="expected-return-date" required class="glass-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="borrow-purpose">วัตถุประสงค์ในการยืมคอมพิวเตอร์เครื่องนี้ <span class="required">*</span></label>
+                        <textarea id="borrow-purpose" rows="3" placeholder="ระบุเหตุผลในการขอยืมใช้งานชั่วคราว เช่น นำเสนอผลงานลูกค้าภายนอก, พัฒนาโปรเจกต์ทดแทนเครื่องเสีย..." required class="glass-input"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="borrow-staff-id">ผู้ทำรายการจ่ายยืมเครื่อง (IT Staff) <span class="required">*</span></label>
+                        <select id="borrow-staff-id" class="glass-input" required>
+                            <option value="" disabled selected>กำลังโหลดรายชื่อเจ้าหน้าที่...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close="borrow-form-modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-success">ยืนยันการทำรายการยืมเครื่อง (Confirm Borrow)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: RETURN ASSET FORM MODAL -->
+    <div class="modal-overlay" id="return-form-modal">
+        <div class="modal-box glass modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-arrows-spin"></i> แบบฟอร์มทำรายการรับคืนคอมพิวเตอร์</h3>
+                <button class="modal-close-btn" data-close="return-form-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="return-asset-form-element">
+                <!-- Keep asset ID in a hidden input -->
+                <input type="hidden" id="return-form-asset-id">
+                
+                <div class="modal-body">
+                    <!-- Scanned Asset Info -->
+                    <div class="scanned-asset-summary rental-summary glass">
+                        <i class="fa-solid fa-hourglass-half warning-icon"></i>
+                        <div>
+                            <h4 id="return-summary-model">Dell Latitude 5430</h4>
+                            <p>Asset Tag: <strong id="return-summary-tag">IT-ASSET-0078</strong> | S/N: <span id="return-summary-sn">DX3982</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Borrower Detail Summary -->
+                    <div class="borrower-summary-box margin-top-md">
+                        <h4 class="box-title"><i class="fa-solid fa-user-clock"></i> รายละเอียดการขอยืมเครื่องรอบปัจจุบัน</h4>
+                        <div class="grid-2-col">
+                            <p><strong>ผู้ยืมคอมพิวเตอร์:</strong> <span id="return-borrower-name">-</span></p>
+                            <p><strong>แผนกผู้ยืม:</strong> <span id="return-borrower-dept">-</span></p>
+                            <p><strong>วันที่ยืมเครื่องไป:</strong> <span id="return-borrow-date">-</span></p>
+                            <p><strong>กำหนดต้องคืน:</strong> <span id="return-expected-date">-</span></p>
+                        </div>
+                        <p class="margin-top-xs"><strong>เหตุผลขอยืม:</strong> <span id="return-borrow-purpose">-</span></p>
+                    </div>
+
+                    <div class="form-row margin-top-lg">
+                        <div class="form-group flex-1">
+                            <label>สถานะของตัวเครื่องคอมพิวเตอร์หลักรับคืน <span class="required">*</span></label>
+                            <div class="radio-card-group">
+                                <label class="radio-card">
+                                    <input type="radio" name="asset-condition" value="Normal" checked>
+                                    <div class="radio-card-content">
+                                        <i class="fa-solid fa-circle-check success-color"></i>
+                                        <div>
+                                            <strong>ปกติสมบูรณ์ (Normal)</strong>
+                                            <span>สภาพใช้งานได้ปกติ ไม่มีแตกหัก</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="asset-condition" value="Damaged">
+                                    <div class="radio-card-content">
+                                        <i class="fa-solid fa-circle-exclamation danger-color"></i>
+                                        <div>
+                                            <strong>มีชำรุดชำรุด (Damaged)</strong>
+                                            <span>เครื่องเปิดไม่ติด, แตกหัก, หรือมีจุดชำรุด</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group margin-top-md">
+                        <label for="return-remarks">หมายเหตุบันทึก หรืออาการชำรุดเพิ่มเติม</label>
+                        <textarea id="return-remarks" rows="3" placeholder="ระบุสภาพเครื่อง เช่น บอดี้มีรอยขีดข่วนบางส่วน, รับคืนพร้อมกระเป๋า/ที่ชาร์จครบชุด..." class="glass-input"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="return-staff-id">เจ้าหน้าที่ไอทีผู้ตรวจรับคืนเครื่อง <span class="required">*</span></label>
+                            <select id="return-staff-id" class="glass-input" required>
+                                <option value="" disabled selected>กำลังโหลดรายชื่อเจ้าหน้าที่...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close="return-form-modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกรับคืนเครื่องเรียบร้อย (Confirm Return)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- MODAL 5: AVAILABLE ASSETS LIST MODAL -->
+    <div class="modal-overlay" id="available-assets-modal">
+        <div class="modal-box glass modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-check" style="color: var(--color-success);"></i> รายการเครื่องว่างพร้อมให้ยืมชั่วคราว</h3>
+                <button class="modal-close-btn" data-close="available-assets-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Asset Tag</th>
+                                <th>Serial Number</th>
+                                <th>รุ่นคอมพิวเตอร์ / สเปก</th>
+                                <th>หมวดหมู่</th>
+                                <th>การจัดสรร</th>
+                                <th style="width: 120px; text-align: center;">ยืมเครื่อง</th>
+                            </tr>
+                        </thead>
+                        <tbody id="available-assets-modal-tbody">
+                            <!-- Dynamic insertion -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- QRCode Generator CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- HTML5 QRCode Reader CDN -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script src="auth.js"></script>
+    <!-- Custom Logic JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

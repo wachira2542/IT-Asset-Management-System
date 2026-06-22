@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ — IT Asset Management | AAPICO HITECH</title>
+    <meta name="description" content="ระบบจัดการและเบิกอุปกรณ์ IT สำหรับพนักงาน AAPICO HITECH">
+
+    <!-- Google Fonts: Bai Jamjuree (AAPICO CI Font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ── AAPICO CI Tokens ── */
+        :root {
+            --aapico-blue: #1D366D;
+            --aapico-blue-h: #243f80;
+            --aapico-green: #2DC84D;
+            --gray-08: #464C59;
+            /* text on white (Darker for readability) */
+            --gray-03: #D8D9DA;
+            /* text on dark (Brighter for readability) */
+            --metallic-dark: #464C59;
+            --metallic-mid: #5A6272;
+            --color-black: #0D0D0E;
+            --color-danger: #ef4444;
+            --font: 'Bai Jamjuree', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            min-height: 100vh;
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+            background: var(--color-black);
+        }
+
+        /* ─────────────────────────────────────────────
+           LEFT HERO PANEL — AAPICO Blue + Metallic
+        ───────────────────────────────────────────── */
+        .hero-panel {
+            width: 52%;
+            min-height: 100vh;
+            background:
+                linear-gradient(160deg,
+                    rgba(45, 200, 77, 0.15) 0%,
+                    rgba(29, 54, 109, 0.4) 40%),
+                linear-gradient(180deg,
+                    rgba(26, 48, 96, 0.85) 0%,
+                    rgba(29, 54, 109, 0.85) 50%,
+                    rgba(21, 40, 80, 0.95) 100%),
+                url('smart_factory_bg.png') center/cover no-repeat;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 48px 52px;
+            overflow: hidden;
+        }
+
+        /* Metallic grid overlay */
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Bottom metallic gradient sweep */
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(to top,
+                    rgba(70, 76, 89, 0.35) 0%,
+                    transparent 100%);
+            pointer-events: none;
+        }
+
+        /* Ecogreen top accent bar */
+        .hero-accent-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--aapico-green);
+        }
+
+        /* Logo area */
+        .hero-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.4rem;
+        }
+
+        .hero-logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-logo-text strong {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-logo-text span {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 1px;
+        }
+
+        /* Main Hero Content */
+        .hero-content {
+            margin-top: auto;
+            margin-bottom: auto;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--aapico-green);
+            background: rgba(45, 200, 77, 0.1);
+            border: 1px solid rgba(45, 200, 77, 0.25);
+            padding: 5px 12px;
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--aapico-green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+
+        .hero-headline {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            line-height: 1.15;
+            margin-bottom: 18px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-headline em {
+            font-style: normal;
+            color: var(--aapico-green);
+        }
+
+        .hero-sub {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 36px;
+        }
+
+        /* Feature pills */
+        .hero-features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hero-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.88rem;
+            color: #FFFFFF;
+        }
+
+        .hero-feature-item i {
+            width: 28px;
+            height: 28px;
+            background: rgba(45, 200, 77, 0.12);
+            border: 1px solid rgba(45, 200, 77, 0.25);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            color: var(--aapico-green);
+            flex-shrink: 0;
+        }
+
+        /* Decorative corner badge */
+        .hero-badge {
+            position: absolute;
+            bottom: 48px;
+            right: 48px;
+            z-index: 1;
+            text-align: right;
+        }
+
+        .hero-badge-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.75);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .hero-badge-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.02em;
+            line-height: 1;
+        }
+
+        /* ─────────────────────────────────────────────
+           RIGHT FORM PANEL — White
+        ───────────────────────────────────────────── */
+        .form-panel {
+            width: 48%;
+            min-height: 100vh;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 56px;
+            position: relative;
+        }
+
+        /* Top-right decorative Ecogreen strip */
+        .form-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--aapico-blue));
+        }
+
+        .form-inner {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        /* Form panel header */
+        .form-header {
+            margin-bottom: 36px;
+        }
+
+        .form-system-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #0D0D0E;
+            background: var(--aapico-green);
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 10px rgba(45, 200, 77, 0.2);
+        }
+
+        .form-system-tag i {
+            font-size: 0.8rem;
+        }
+
+        .form-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--aapico-blue);
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+            display: inline-block;
+            background: linear-gradient(transparent 65%, rgba(45, 200, 77, 0.4) 35%);
+            padding: 0 4px;
+        }
+
+        .form-subtitle {
+            font-size: 0.88rem;
+            color: var(--gray-08);
+            /* text on white = Gray 08 */
+            line-height: 1.6;
+        }
+
+        /* Info banner */
+        .form-info-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: rgba(29, 54, 109, 0.06);
+            border: 1px solid rgba(29, 54, 109, 0.15);
+            border-left: 3px solid var(--aapico-blue);
+            border-radius: 2px;
+            margin-bottom: 28px;
+        }
+
+        .form-info-banner i {
+            font-size: 1.1rem;
+            color: var(--aapico-blue);
+            flex-shrink: 0;
+        }
+
+        .form-info-banner-text strong {
+            display: block;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--aapico-blue);
+            margin-bottom: 2px;
+        }
+
+        .form-info-banner-text small {
+            font-size: 0.76rem;
+            color: var(--gray-08);
+            line-height: 1.4;
+        }
+
+        /* Form Fields */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field-group label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--aapico-blue);
+        }
+
+        .field-input-wrap {
+            position: relative;
+        }
+
+        .field-input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #B0B2B8;
+            font-size: 0.88rem;
+            pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            border: 1.5px solid #E2E4E8;
+            border-radius: 2px;
+            background: #FAFAFA;
+            color: #1a1a2e;
+            font-family: var(--font);
+            font-size: 0.92rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field-input::placeholder {
+            color: #8A8F9B;
+        }
+
+        .field-input:focus {
+            border-color: var(--aapico-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(29, 54, 109, 0.08);
+        }
+
+        /* Error message */
+        #login-error {
+            min-height: 22px;
+            font-size: 0.82rem;
+            color: var(--color-danger);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        /* Submit button — Ecogreen (primary CTA on form bg) */
+        .btn-submit {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 2px;
+            background: var(--aapico-blue);
+            color: #FFFFFF;
+            font-family: var(--font);
+            font-size: 0.96rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .btn-submit:hover {
+            background: var(--aapico-blue-h);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(29, 54, 109, 0.25);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Footer note */
+        .form-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #ECEEF2;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-footer p {
+            font-size: 0.78rem;
+            color: var(--gray-08);
+            line-height: 1.6;
+        }
+
+        .form-footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .form-footer-brand span {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--aapico-blue);
+        }
+
+        .form-footer-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--aapico-green);
+            border-radius: 50%;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 860px) {
+            body {
+                flex-direction: column;
+            }
+
+            .hero-panel {
+                width: 100%;
+                min-height: auto;
+                padding: 36px 28px;
+            }
+
+            .hero-headline {
+                font-size: 2.2rem;
+            }
+
+            .hero-badge {
+                display: none;
+            }
+
+            .form-panel {
+                width: 100%;
+                min-height: auto;
+                padding: 36px 24px 48px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-panel {
+                padding: 28px 18px 40px;
+            }
+
+            .hero-panel {
+                padding: 28px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════ LEFT HERO PANEL ══════════ -->
+    <div class="hero-panel">
+        <div class="hero-accent-bar"></div>
+
+        <!-- Logo -->
+        <div class="hero-logo">
+            <div class="hero-logo-icon">
+                <i class="fa-solid fa-laptop-code"></i>
+            </div>
+            <div class="hero-logo-text">
+                <strong>AAPICO</strong>
+                <span>IT Asset Management</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="hero-content">
+            <div class="hero-eyebrow">
+                Internal System
+            </div>
+
+            <h1 class="hero-headline">
+                Steadiness<br>Meets <em>Innovation.</em>
+            </h1>
+
+            <p class="hero-sub">
+                ระบบจัดการและติดตามทรัพย์สิน IT สำหรับพนักงาน AAPICO HITECH
+                ด้วยความมั่นคง รวดเร็ว และแม่นยำ
+            </p>
+
+            <div class="hero-features">
+                <div class="hero-feature-item">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>สแกน QR Code ยืม-คืนอุปกรณ์ทันที</span>
+                </div>
+                <div class="hero-feature-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard ติดตามสถานะ Real-time</span>
+                </div>
+                <div class="hero-feature-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>ตรวจสอบสิทธิ์ผ่าน Corporate AD</span>
+                </div>
+                <div class="hero-feature-item">
+                    <i class="fa-solid fa-leaf"></i>
+                    <span>สนับสนุน Ecogreen ลดการสูญเสียทรัพยากร</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-badge">
+            <span class="hero-badge-label">Powered by</span>
+            <span class="hero-badge-value">AAPICO</span>
+        </div>
+    </div>
+
+    <!-- ══════════ RIGHT FORM PANEL ══════════ -->
+    <div class="form-panel">
+        <div class="form-inner">
+
+            <div class="form-header">
+                <div class="form-system-tag">
+                    <i class="fa-solid fa-circle-dot"></i>
+                    IT Asset Hub — Secure Login
+                </div>
+                <h2 class="form-title">เข้าสู่ระบบ</h2>
+                <p class="form-subtitle">
+                    กรุณาใช้ข้อมูลบัญชีองค์กรของคุณ (Corporate AD Account) เพื่อเข้าใช้งานระบบ
+                </p>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="form-info-banner">
+                <i class="fa-solid fa-building"></i>
+                <div class="form-info-banner-text">
+                    <strong>ระบบการเบิกอุปกรณ์ IT — AAPICO HITECH</strong>
+                    <small>สำหรับพนักงานที่ได้รับอนุญาตเท่านั้น · Authorized Personnel Only</small>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="login-form" autocomplete="off" novalidate>
+                <div class="field-group">
+                    <label for="login-username">ชื่อผู้ใช้ (Username)</label>
+                    <div class="field-input-wrap">
+                        <i class="fa-solid fa-user"></i>
+                        <input id="login-username" type="text" class="field-input" placeholder="ชื่อผู้ใช้งาน AD ของคุณ"
+                            autocomplete="username" required>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="login-password">รหัสผ่าน (Password)</label>
+                    <div class="field-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input id="login-password" type="password" class="field-input" placeholder="รหัสผ่าน AD ของคุณ"
+                            autocomplete="current-password" required>
+                    </div>
+                </div>
+
+                <div id="login-error"></div>
+
+                <button type="submit" class="btn-submit" id="login-submit-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="form-footer">
+                <p>กรุณาใช้บัญชีผู้ใช้ Active Directory (AD) ขององค์กรเพื่อเข้าสู่ระบบ</p>
+                <p>หากพบปัญหา กรุณาติดต่อแผนก IT Support โทร : 1234</p>
+                <div class="form-footer-brand">
+                    <div class="form-footer-dot"></div>
+                    <span>AAPICO HITECH Co., Ltd.</span>
+                    <div class="form-footer-dot"></div>
+                    <span>IT Department</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+
+</html>

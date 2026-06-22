@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบขอยืมคอมพิวเตอร์ - IT Asset Hub</title>
+    <meta name="description" content="แบบฟอร์มออนไลน์สำหรับพนักงานในการขอยืมคอมพิวเตอร์ชั่วคราวจากแผนก IT">
+
+    <!-- Google Fonts (ใช้ fonts เดิมจาก admin) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- ใช้ styles.css เดิมจาก Admin -->
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* ===== USER PAGE SPECIFIC STYLES (เพิ่มเติมจาก styles.css หลัก) ===== */
+
+        /* User Page Layout (ไม่มี sidebar - full width) */
+        .user-page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Bar */
+        .user-topbar {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 3px solid var(--aapico-blue);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-topbar-brand .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--aapico-blue);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .user-topbar-brand h1 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: 0.02em;
+        }
+
+        .user-topbar-brand span {
+            font-size: 0.7rem;
+            color: var(--gray-03);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            display: block;
+        }
+
+        .user-role-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: var(--radius-xs);
+            background: var(--aapico-green-dim);
+            border: 1px solid var(--border-green);
+            color: var(--aapico-green);
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            letter-spacing: 0.04em;
+        }
+
+        .user-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Page Hero Section - Modern Corporate Redesign */
+        .page-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 44px 52px;
+            position: relative;
+            background: linear-gradient(135deg, #0A142A 0%, #060B18 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(45, 200, 77, 0.15);
+            border: 1px solid rgba(45, 200, 77, 0.3);
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--aapico-green);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-family: var(--font-heading);
+            box-shadow: 0 2px 10px rgba(45, 200, 77, 0.1);
+        }
+
+        .page-hero h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 14px;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+        }
+
+        .page-hero p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.6;
+            font-weight: 400;
+            max-width: 100%;
+        }
+
+        .hero-decoration {
+            position: relative;
+            z-index: 2;
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(29, 54, 109, 0.3), rgba(10, 15, 30, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.5rem;
+            color: rgba(255, 255, 255, 0.85);
+            transform: rotate(6deg);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+            animation: heroBreathe 6s ease-in-out infinite;
+        }
+
+        @keyframes heroBreathe {
+
+            0%,
+            100% {
+                transform: rotate(6deg) translateY(0);
+            }
+
+            50% {
+                transform: rotate(4deg) translateY(-8px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 36px 24px;
+            }
+
+            .hero-content {
+                text-align: center;
+            }
+
+            .hero-badge {
+                margin: 0 auto 16px auto;
+            }
+
+            .hero-decoration {
+                display: none;
+            }
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 36px;
+            justify-content: center;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            max-width: 160px;
+            position: relative;
+        }
+
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -50%;
+            top: 20px;
+            width: 100%;
+            height: 2px;
+            background: var(--border-subtle);
+            z-index: 0;
+        }
+
+        .step-item.active:not(:last-child)::after,
+        .step-item.done:not(:last-child)::after {
+            background: linear-gradient(to right, var(--aapico-green), rgba(45, 200, 77, 0.3));
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 2px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            color: var(--color-text-muted);
+            font-weight: 700;
+            font-family: var(--font-heading);
+            z-index: 1;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .step-item.active .step-circle {
+            background: var(--aapico-blue);
+            border-color: var(--aapico-blue);
+            color: #fff;
+            box-shadow: var(--shadow-blue-glow);
+        }
+
+        .step-item.done .step-circle {
+            background: var(--aapico-green);
+            border-color: var(--aapico-green);
+            color: #0D0D0E;
+        }
+
+        .step-label {
+            font-size: 0.73rem;
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-item.active .step-label {
+            color: var(--aapico-blue-light);
+        }
+
+        .step-item.done .step-label {
+            color: var(--aapico-green);
+        }
+
+        /* Content Views (Steps) */
+        .view-panel {
+            display: none;
+            animation: fadeInUp 0.3s ease forwards;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== STEP 1: Available Computers Grid ===== */
+        .available-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .available-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #F8FAFC;
+        }
+
+        .available-count-badge {
+            padding: 6px 14px;
+            border-radius: 6px;
+            background: rgba(45, 200, 77, 0.1);
+            border: 1px solid rgba(45, 200, 77, 0.25);
+            color: var(--aapico-green);
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            letter-spacing: 0.04em;
+        }
+
+        .computers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        /* Computer Card */
+        .computer-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* AAPICO Blue top accent per card */
+        .computer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--aapico-blue), rgba(56, 189, 248, 0.7));
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .computer-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(56, 189, 248, 0.1);
+            background: rgba(20, 26, 40, 0.8);
+        }
+
+        .computer-card:hover::before {
+            opacity: 1;
+        }
+
+        .computer-card.selected {
+            border-color: var(--aapico-green);
+            background: rgba(45, 200, 77, 0.05);
+            box-shadow: 0 0 20px rgba(45, 200, 77, 0.1), 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .computer-card.selected::before {
+            opacity: 1;
+            background: var(--aapico-green);
+        }
+
+        .card-icon-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .card-device-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: rgba(29, 54, 109, 0.2);
+            border: 1px solid var(--border-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #7fa7e8;
+        }
+
+        .card-available-dot {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: var(--aapico-green);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .card-available-dot::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.4);
+            }
+        }
+
+        .card-model {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #E8E9EA;
+            margin-bottom: 5px;
+            line-height: 1.35;
+            font-family: var(--font-heading);
+        }
+
+        .card-tag {
+            font-size: 0.76rem;
+            color: var(--aapico-green);
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-family: var(--font-heading);
+        }
+
+        .card-sn {
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            margin-bottom: 14px;
+        }
+
+        .card-category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: var(--radius-xs);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            color: var(--gray-03);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+        }
+
+        .card-select-btn {
+            width: 100%;
+            margin-top: 14px;
+            padding: 9px;
+            border-radius: var(--radius-sm);
+            background: rgba(29, 54, 109, 0.15);
+            border: 1px solid var(--border-blue);
+            color: #7fa7e8;
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            letter-spacing: 0.03em;
+        }
+
+        .card-select-btn:hover {
+            background: rgba(29, 54, 109, 0.3);
+            color: #fff;
+        }
+
+        .computer-card.selected .card-select-btn {
+            background: var(--aapico-green);
+            border-color: var(--aapico-green);
+            color: #0D0D0E;
+            font-weight: 800;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: var(--color-text-muted);
+        }
+
+        .empty-state i {
+            font-size: 2.8rem;
+            margin-bottom: 14px;
+            display: block;
+            opacity: 0.4;
+        }
+
+        .empty-state h4 {
+            font-size: 1rem;
+            color: var(--gray-03);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.84rem;
+        }
+
+        /* Skeleton Loading */
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            animation: skeletonPulse 1.6s ease-in-out infinite;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-xs);
+            margin-bottom: 12px;
+        }
+
+        .skeleton-line.short {
+            width: 50%;
+        }
+
+        .skeleton-line.medium {
+            width: 70%;
+        }
+
+        .skeleton-line.tall {
+            height: 44px;
+            border-radius: var(--radius-sm);
+            width: 44px;
+            margin-bottom: 14px;
+        }
+
+        @keyframes skeletonPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ===== STEP 2: Borrow Form ===== */
+        .borrow-form-container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .selected-asset-banner {
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid var(--border-green);
+            border-left: 3px solid var(--aapico-green);
+            background: rgba(45, 200, 77, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .selected-asset-banner i {
+            font-size: 1.6rem;
+            color: var(--aapico-green);
+            flex-shrink: 0;
+        }
+
+        .selected-asset-banner .asset-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+            color: #E8E9EA;
+        }
+
+        .selected-asset-banner .asset-info p {
+            font-size: 0.78rem;
+            color: var(--gray-03);
+        }
+
+        .selected-asset-banner .change-btn {
+            margin-left: auto;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--gray-03);
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: var(--font-heading);
+            flex-shrink: 0;
+        }
+
+        .selected-asset-banner .change-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #E8E9EA;
+        }
+
+        .form-section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            border-top: 3px solid var(--aapico-blue);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-base);
+        }
+
+        .form-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--aapico-green);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-heading);
+        }
+
+        .form-submit-area {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* ===== STEP 3: Success Confirmation ===== */
+        .success-view {
+            text-align: center;
+            padding: 56px 20px;
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        .success-animation {
+            width: 90px;
+            height: 90px;
+            background: var(--aapico-green);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            color: #0D0D0E;
+            margin: 0 auto 28px auto;
+            box-shadow: 0 0 40px rgba(45, 200, 77, 0.4);
+            animation: successPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            80% {
+                transform: scale(1.08);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-view h2 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--aapico-green);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .success-view p {
+            color: var(--gray-03);
+            font-size: 0.92rem;
+            line-height: 1.75;
+            margin-bottom: 28px;
+        }
+
+        .success-summary-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            border-left: 3px solid var(--aapico-green);
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 28px;
+        }
+
+        .success-summary-box .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.84rem;
+        }
+
+        .success-summary-box .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .success-summary-box .summary-label {
+            color: var(--gray-03);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .success-summary-box .summary-value {
+            font-weight: 700;
+            color: #E8E9EA;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .user-main {
+                padding: 20px 14px;
+            }
+
+            .user-topbar {
+                padding: 0 14px;
+            }
+
+            .computers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-hero h2 {
+                font-size: 1.4rem;
+            }
+
+            .step-indicator {
+                gap: 0;
+            }
+
+            .form-submit-area {
+                flex-direction: column;
+            }
+
+            .form-submit-area .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Toast for user page */
+        #user-toast-container {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ── User Info Bar (In Header) ── */
+        .user-info-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-right: 16px;
+            border-right: 1px solid var(--border-subtle);
+        }
+
+        .user-info-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar-initials {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            background: var(--aapico-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            letter-spacing: 0.04em;
+        }
+
+        .user-info-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .user-info-name {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #E8E9EA;
+            line-height: 1.3;
+        }
+
+        .user-info-meta {
+            font-size: 0.7rem;
+            color: var(--gray-03);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-info-meta .dot {
+            width: 3px;
+            height: 3px;
+            background: var(--gray-03);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .user-info-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-session-tag {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--gray-03);
+        }
+
+        .user-session-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--aapico-green);
+            animation: pulseDot 2.5s ease-in-out infinite;
+        }
+
+        /* Override user-main for more horizontal padding */
+        .user-main {
+            flex-grow: 1;
+            padding: 36px 48px;
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .user-main {
+                padding: 24px 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .user-main {
+                padding: 16px 14px;
+            }
+
+            .user-info-meta {
+                display: none;
+            }
+
+            .user-session-tag {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="user-page-wrapper">
+
+        <!-- ===== TOP NAVIGATION BAR ===== -->
+        <header class="user-topbar">
+            <div class="user-topbar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-laptop-code"></i>
+                </div>
+                <div>
+                    <h1>IT Asset Hub</h1>
+                    <span>ระบบขอยืมคอมพิวเตอร์ชั่วคราว</span>
+                </div>
+            </div>
+            <div class="user-topbar-actions">
+                <div class="user-info-bar" id="user-info-bar">
+                    <div class="user-info-left">
+                        <div class="user-avatar-initials" id="user-avatar-initials">IT</div>
+                        <div class="user-info-details">
+                            <div class="user-info-name" id="user-display-name">กำลังโหลด...</div>
+                            <div class="user-info-meta">
+                                <span id="user-username-display">-</span>
+                                <div class="dot"></div>
+                                <span id="user-role-display">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-info-right">
+                        <div class="user-session-tag">
+                            <div class="user-session-dot"></div>
+                            <span>Active</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-logout" id="logout-btn" title="ออกจากระบบ">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>ออกระบบ</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="user-main">
+
+            <!-- Hero Section -->
+            <div class="page-hero">
+                <div class="hero-content">
+                    <div class="hero-badge">IT Asset Rental System</div>
+                    <h2>ขอยืมคอมพิวเตอร์ชั่วคราว</h2>
+                    <p>เลือกเครื่องคอมพิวเตอร์ที่ว่างอยู่ และกรอกข้อมูลเพื่อทำรายการขอยืม<br>
+                        แผนก IT จะบันทึกข้อมูลให้เรียบร้อย</p>
+
+                    <!-- Overall Summary (Moved to top left in hero) -->
+                    <div id="overall-summary"
+                        style="display: none; justify-content: flex-start; gap: 16px; margin-top: 24px; flex-wrap: wrap;">
+                        <div class="summary-card"
+                            style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 14px; min-width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+                            <div
+                                style="width: 44px; height: 44px; border-radius: 10px; background: rgba(45, 200, 77, 0.15); display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-circle-check"
+                                    style="font-size: 1.5rem; color: var(--aapico-green);"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-03); font-weight: 600;">
+                                    เครื่องว่างพร้อมยืม</div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #F8FAFC; line-height: 1.1;"
+                                    id="total-available-count">0</div>
+                            </div>
+                        </div>
+                        <div class="summary-card"
+                            style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 14px; min-width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+                            <div
+                                style="width: 44px; height: 44px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-clock"
+                                    style="font-size: 1.5rem; color: var(--color-warning);"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-03); font-weight: 600;">
+                                    กำลังถูกยืมอยู่</div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #F8FAFC; line-height: 1.1;"
+                                    id="total-rented-count">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-decoration">
+                    <i class="fa-solid fa-laptop-code"></i>
+                </div>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator" id="step-indicator">
+                <div class="step-item active" id="step-1-item">
+                    <div class="step-circle"><i class="fa-solid fa-computer"></i></div>
+                    <span class="step-label">เลือกเครื่อง</span>
+                </div>
+                <div class="step-item" id="step-2-item">
+                    <div class="step-circle"><i class="fa-solid fa-pen-to-square"></i></div>
+                    <span class="step-label">กรอกข้อมูล</span>
+                </div>
+                <div class="step-item" id="step-3-item">
+                    <div class="step-circle"><i class="fa-solid fa-circle-check"></i></div>
+                    <span class="step-label">สำเร็จ</span>
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- VIEW 1: Available Computers   -->
+            <!-- ============================= -->
+            <div class="view-panel active" id="view-select">
+                <!-- Actual Computers Grid (filled by JS) -->
+                <div id="category-sections-container" style="display:none; margin-top: 10px;"></div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- VIEW 2: Borrow Form           -->
+            <!-- ============================= -->
+            <div class="view-panel" id="view-form">
+                <div class="borrow-form-container">
+
+                    <!-- Selected Computer Banner -->
+                    <div class="selected-asset-banner" id="selected-asset-banner">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div class="asset-info">
+                            <h4 id="banner-model">-</h4>
+                            <p>Asset Tag: <strong id="banner-tag">-</strong> &nbsp;|&nbsp; S/N: <span
+                                    id="banner-sn">-</span></p>
+                        </div>
+                        <button class="change-btn" id="btn-change-computer">
+                            <i class="fa-solid fa-arrow-left"></i> เปลี่ยนเครื่อง
+                        </button>
+                    </div>
+
+                    <form id="user-borrow-form" novalidate>
+                        <input type="hidden" id="form-asset-id">
+
+                        <!-- Section 1: ข้อมูลพนักงาน -->
+                        <div class="form-section-card">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-user"></i> ข้อมูลพนักงานผู้ขอยืม
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="u-full-name">ชื่อ-นามสกุล <span class="required">*</span></label>
+                                    <input type="text" id="u-full-name" class="glass-input"
+                                        placeholder="ระบุชื่อ-นามสกุลพนักงาน" required autocomplete="name">
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="u-employee-id">รหัสพนักงาน <span class="required">*</span></label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="u-employee-id" class="glass-input"
+                                            placeholder="เช่น 1000XXXX" required autocomplete="off" style="flex: 1;">
+                                        <button type="button" class="btn btn-primary" id="u-ad-search-btn"
+                                            title="ค้นหาข้อมูลจาก Active Directory">
+                                            <i class="fa-solid fa-magnifying-glass"></i> ค้นหาจากรหัสพนักงาน
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="u-department">แผนก / ฝ่าย (Department) <span
+                                            class="required">*</span></label>
+                                    <select id="u-department" class="glass-input" required>
+                                        <option value="" disabled selected>กำลังโหลดข้อมูลแผนกจาก AD...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="u-phone">เบอร์ติดต่อ</label>
+                                    <input type="tel" id="u-phone" class="glass-input" placeholder="เช่น 089-XXXXXXX"
+                                        autocomplete="tel">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="u-title">ตำแหน่ง (Title)</label>
+                                    <input type="text" id="u-title" class="glass-input" placeholder="เช่น IT Support">
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="u-company">บริษัท (Company)</label>
+                                    <input type="text" id="u-company" class="glass-input" placeholder="เช่น AH , AHP">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: รายละเอียดการยืม -->
+                        <div class="form-section-card">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-calendar-days"></i> รายละเอียดการยืม
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="u-borrow-date">วันที่ต้องการยืม <span class="required">*</span></label>
+                                    <input type="datetime-local" id="u-borrow-date" class="glass-input" required>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="u-return-date">กำหนดส่งคืน <span class="required">*</span></label>
+                                    <input type="date" id="u-return-date" class="glass-input" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="u-purpose">วัตถุประสงค์ในการยืม / สถานที่ <span
+                                        class="required">*</span></label>
+                                <textarea id="u-purpose" rows="4" class="glass-input"
+                                    placeholder="ระบุเหตุผลในการขอยืมใช้งานชั่วคราว เช่น&#10;- นำเสนอผลงานลูกค้าภายนอก&#10;- พัฒนาโปรเจกต์ทดแทนเครื่องเสีย&#10;- อบรมสัมมนาภายนอกสำนักงาน"
+                                    required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Disclaimer Notice -->
+                        <div class="instruction-box" style="margin-bottom: 24px;">
+                            <h4><i class="fa-solid fa-circle-info"></i> ข้อตกลงการยืมคอมพิวเตอร์</h4>
+                            <ul>
+                                <li>ผู้ยืมต้องดูแลรักษาอุปกรณ์ให้อยู่ในสภาพดีตลอดระยะเวลาการยืม</li>
+                                <li>กรุณาส่งคืนตามกำหนดที่ระบุ หากต้องการต่อเวลาให้แจ้งเจ้าหน้าที่ IT ล่วงหน้า</li>
+                                <li>หากอุปกรณ์เกิดความเสียหาย กรุณาแจ้งเจ้าหน้าที่ IT ทันที</li>
+                            </ul>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="form-submit-area">
+                            <button type="button" class="btn btn-secondary" id="btn-back-to-select">
+                                <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+                            </button>
+                            <button type="submit" class="btn btn-success" id="btn-submit-borrow">
+                                <i class="fa-solid fa-paper-plane"></i> ยืนยันการขอยืมเครื่อง
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- VIEW 3: Success Screen        -->
+            <!-- ============================= -->
+            <div class="view-panel" id="view-success">
+                <div class="success-view">
+                    <div class="success-animation">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h2>ส่งคำขอยืมสำเร็จ!</h2>
+                    <p>คำขอกำลังอยู่ในขั้นตอน In-Process (รอผู้ดูแลระบบทำการอนุมัติ)
+                        เมื่อได้รับการอนุมัติแล้ว กรุณาติดต่อรับเครื่องที่แผนก IT พร้อมบัตรพนักงาน</p>
+
+                    <!-- Summary -->
+                    <div class="success-summary-box" id="success-summary-box">
+                        <div class="summary-row">
+                            <span class="summary-label">เครื่องที่ยืม</span>
+                            <span class="summary-value" id="sum-model">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Asset Tag</span>
+                            <span class="summary-value" id="sum-tag">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">ผู้ยืม</span>
+                            <span class="summary-value" id="sum-name">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">แผนก</span>
+                            <span class="summary-value" id="sum-dept">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">กำหนดส่งคืน</span>
+                            <span class="summary-value" id="sum-return">-</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-borrow-another"
+                        style="width: 100%; justify-content: center; padding: 14px;">
+                        <i class="fa-solid fa-rotate-right"></i> ขอยืมเครื่องอื่น / กลับหน้าหลัก
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="user-toast-container"></div>
+
+    <!-- Rental Detail Modal -->
+    <div class="modal-overlay" id="rental-detail-modal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="modal-box glass"
+            style="width: 100%; max-width: 500px; padding: 24px; border-radius: 12px; position: relative;">
+            <button id="close-rental-modal"
+                style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--gray-03); font-size:1.4rem; cursor:pointer;"><i
+                    class="fa-solid fa-xmark"></i></button>
+            <h3
+                style="margin-bottom: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; color: #fff;">
+                <i class="fa-solid fa-circle-info"></i> รายละเอียดการยืม
+            </h3>
+            <div id="rental-detail-content" style="font-size: 0.9rem; line-height: 1.6;"></div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        /* =====================================================================
+           IT Asset Hub — User Borrow Form (user.html)
+           พนักงานทั่วไป: ดูเครื่องว่าง + กรอกฟอร์มยืม
+           ไม่มีสิทธิ์ Admin ทุกประเภท
+           ===================================================================== */
+
+        // ========== STATE ==========
+        const UserState = {
+            selectedAsset: null,
+            availableAssets: [],
+            allTransactions: []
+        };
+
+        // ========== UTILITIES ==========
+
+        function showToast(message, type = 'success', duration = 3500) {
+            const container = document.getElementById('user-toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const iconMap = { success: 'fa-circle-check', warning: 'fa-circle-exclamation', danger: 'fa-triangle-exclamation' };
+            toast.innerHTML = `
+            <i class="fa-solid ${iconMap[type] || iconMap.success}"></i>
+            <div class="toast-message">${message}</div>
+        `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('toast-out');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, duration);
+        }
+
+        function formatDateOnly(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function getCategoryIcon(category) {
+            if (!category) return 'fa-computer';
+            const c = category.toLowerCase();
+            if (c.includes('laptop') || c.includes('notebook')) return 'fa-laptop';
+            if (c.includes('desktop')) return 'fa-desktop';
+            if (c.includes('workstation')) return 'fa-server';
+            return 'fa-computer';
+        }
+
+        // ========== STEP NAVIGATION ==========
+
+        function goToStep(step) {
+            // Update step indicator
+            const steps = ['step-1-item', 'step-2-item', 'step-3-item'];
+            steps.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (idx + 1 < step) el.classList.add('done');
+                else if (idx + 1 === step) el.classList.add('active');
+            });
+
+            // Switch view panels
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            const views = ['view-select', 'view-form', 'view-success'];
+            const target = document.getElementById(views[step - 1]);
+            if (target) target.classList.add('active');
+
+            // Scroll to top of main
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ========== LOAD AVAILABLE COMPUTERS ==========
+
+        async function loadAvailableComputers() {
+            try {
+                // เรียก /api/assets เพื่อให้ได้ข้อมูลจาก GLPI และ SQLite
+                const res = await fetch('/api/assets?usage_type=Rental');
+                if (!res.ok) throw new Error('API error ' + res.status);
+                const assets = await res.json();
+
+                // โหลด transactions แยกสำหรับแสดงข้อมูลผู้ยืมปัจจุบัน
+                const txRes = await fetch('/api/transactions');
+                if (txRes.ok) {
+                    UserState.allTransactions = await txRes.json();
+                }
+
+                UserState.availableAssets = assets;
+                renderCategoryGroups(assets);
+            } catch (err) {
+                console.error('Failed to load assets:', err);
+                showToast('ไม่สามารถดึงข้อมูลเครื่องคอมพิวเตอร์จากเซิร์ฟเวอร์ได้', 'danger');
+                document.getElementById('skeleton-grid').style.display = 'none';
+                const container = document.getElementById('category-sections-container');
+                container.style.display = 'block';
+                container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--color-danger); opacity: 1;"></i>
+                    <h4>เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</h4>
+                    <p>กรุณาติดต่อเจ้าหน้าที่ IT หรือลองใหม่อีกครั้ง</p>
+                </div>
+            `;
+            }
+        }
+
+        function renderCategoryGroups(assets) {
+            const container = document.getElementById('category-sections-container');
+            const skeletonGrid = document.getElementById('skeleton-grid');
+            if (skeletonGrid) skeletonGrid.style.display = 'none';
+
+            container.style.display = 'block';
+            container.innerHTML = '';
+
+            let totalAvailable = 0;
+            let totalRented = 0;
+
+            const categories = [
+                { id: 'notebook', name: 'Laptop / Notebook', match: ['laptop', 'notebook'] },
+                { id: 'desktop', name: 'Desktop PC', match: ['desktop', 'pc'] },
+                { id: 'workstation', name: 'Workstation', match: ['workstation'] }
+            ];
+
+            categories.forEach(cat => {
+                const catAssets = assets.filter(a => {
+                    // กรองตาม category และตรวจสอบ location ว่ามีคำว่า IT Store
+                    const c = (a.category || a.computertype || '').toLowerCase();
+                    const loc = (a.location || '').toLowerCase();
+                    const isItStore = loc.includes('it store');
+                    return cat.match.some(m => c.includes(m)) && isItStore;
+                });
+
+                if (catAssets.length === 0) return;
+
+                const availableCount = catAssets.filter(a => a.status === 'Available').length;
+                const rentedCount = catAssets.filter(a => a.status === 'Rented').length;
+
+                totalAvailable += availableCount;
+                totalRented += rentedCount;
+
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                section.style.marginBottom = '40px';
+
+                section.innerHTML = `
+                    <div class="available-header" style="border-bottom: 2px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 20px;">
+                        <h3><i class="fa-solid ${getCategoryIcon(cat.name)}" style="color: var(--color-primary); margin-right: 8px;"></i> ${cat.name}</h3>
+                        <div style="display:flex; gap:10px;">
+                            <span class="available-count-badge"><i class="fa-solid fa-circle-check"></i> ว่าง: ${availableCount}</span>
+                            <span class="available-count-badge" style="background:rgba(245, 158, 11, 0.15); color:var(--color-warning); border-color:var(--color-warning);"><i class="fa-solid fa-clock"></i> ถูกยืม: ${rentedCount}</span>
+                        </div>
+                    </div>
+                    <div class="computers-grid"></div>
+                `;
+
+                const grid = section.querySelector('.computers-grid');
+
+                catAssets.forEach(asset => {
+                    const isAvailable = asset.status === 'Available';
+                    const isRented = asset.status === 'Rented';
+                    const isPending = asset.status === 'Pending';
+                    const isRejected = asset.status === 'Rejected';
+
+                    if (!isAvailable && !isRented && !isPending && !isRejected) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'computer-card';
+                    card.dataset.id = asset.id;
+
+                    let rentalInfoHtml = '';
+                    if (isRented) {
+                        card.style.opacity = '0.85';
+                        card.style.borderColor = 'var(--border-subtle)';
+
+                        const activeTx = UserState.allTransactions && UserState.allTransactions.find(t => String(t.asset_id) === String(asset.id) && !t.return_date);
+                        if (activeTx) {
+                            rentalInfoHtml = `
+                                <div style="margin-top: 8px; margin-bottom: 12px; padding: 10px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4;">
+                                    <div style="margin-bottom: 4px;"><i class="fa-solid fa-user" style="color: var(--color-warning); width: 14px;"></i> <strong style="color: #E8E9EA;">ผู้ยืม:</strong> ${activeTx.borrower_name}</div>
+                                    <div><i class="fa-solid fa-calendar-check" style="color: var(--color-warning); width: 14px;"></i> <strong style="color: #E8E9EA;">คืนวันที่:</strong> ${formatDateOnly(activeTx.expected_return_date)}</div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    if (isRejected) {
+                        card.style.opacity = '0.7';
+                        card.style.borderColor = 'var(--color-danger)';
+                        if (asset.rejected_at) card.setAttribute('data-rejected-at', asset.rejected_at);
+                        const reasonText = asset.reject_reason || 'ไม่อนุมัติการยืม (ไม่ระบุเหตุผล)';
+                        rentalInfoHtml = `
+                                <div style="margin-top: 8px; margin-bottom: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 6px; font-size: 0.75rem; color: var(--color-danger); line-height: 1.4;">
+                                    <div style="margin-bottom: 4px; display:flex; justify-content:space-between;">
+                                        <strong><i class="fa-solid fa-circle-xmark"></i> เหตุผล:</strong>
+                                        <span class="reject-countdown" style="font-weight:bold; font-family:monospace;"></span>
+                                    </div>
+                                    <div>${reasonText}</div>
+                                </div>
+                        `;
+                    }
+
+                    if (isPending) {
+                        card.style.opacity = '0.7';
+                        card.style.borderColor = 'var(--aapico-blue)';
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-icon-row">
+                            <div class="card-device-icon" style="${isRented ? 'color: var(--color-warning); border-color: var(--border-warning); background: rgba(245, 158, 11, 0.1)' : ''}">
+                                <i class="fa-solid ${getCategoryIcon(asset.category)}"></i>
+                            </div>
+                            ${isAvailable
+                            ? `<span class="card-available-dot">ว่างอยู่</span>`
+                            : isRented ? `<span class="card-available-dot" style="color:var(--color-warning);"><i class="fa-solid fa-clock"></i> ถูกยืม</span>`
+                                : isPending ? `<span class="card-available-dot" style="color:var(--aapico-blue);"><i class="fa-solid fa-spinner fa-spin"></i> In-Process</span>`
+                                    : isRejected ? `<span class="card-available-dot" style="color:var(--color-danger);"><i class="fa-solid fa-xmark"></i> Rejected</span>` : ''
+                        }
+                        </div>
+                        <div class="card-model">${asset.model_name || asset.computermodel || 'ไม่ระบุรุ่น'}</div>
+                        <div class="card-tag"><i class="fa-solid fa-tag" style="font-size: 0.65rem;"></i> ${asset.asset_tag}</div>
+                        <div class="card-sn" style="margin-bottom: 8px;">S/N: ${asset.serial_number}</div>
+                        <span class="card-category-chip" style="${isRented ? 'margin-bottom: 4px;' : 'margin-bottom: 12px;'}">
+                            <i class="fa-solid fa-microchip" style="font-size: 0.65rem;"></i> ${asset.category || 'ไม่ระบุ'}
+                        </span>
+                        
+                        ${rentalInfoHtml}
+                        
+                        ${isAvailable ? `
+                        <button class="card-select-btn" data-id="${asset.id}">
+                            <i class="fa-solid fa-hand-pointer"></i> เลือกเครื่องนี้
+                        </button>` : ''}
+                    `;
+
+                    if (isAvailable) {
+                        card.querySelector('.card-select-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            selectComputer(asset);
+                        });
+                        card.addEventListener('click', () => selectComputer(asset));
+                    }
+
+                    grid.appendChild(card);
+                });
+
+                if (grid.innerHTML !== '') container.appendChild(section);
+            });
+
+            const summaryBox = document.getElementById('overall-summary');
+            if (container.innerHTML === '') {
+                if (summaryBox) summaryBox.style.display = 'none';
+                container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h4>ไม่มีเครื่องในระบบ</h4>
+                </div>`;
+            } else {
+                if (summaryBox) {
+                    summaryBox.style.display = 'flex';
+                    document.getElementById('total-available-count').textContent = totalAvailable;
+                    document.getElementById('total-rented-count').textContent = totalRented;
+                }
+            }
+        }
+
+        function showRentalDetail(asset) {
+            console.log('showRentalDetail called for asset:', asset);
+            let activeTx = null;
+            if (UserState.allTransactions && Array.isArray(UserState.allTransactions)) {
+                activeTx = UserState.allTransactions.find(t => String(t.asset_id) === String(asset.id) && !t.return_date);
+            }
+            const modal = document.getElementById('rental-detail-modal');
+            const content = document.getElementById('rental-detail-content');
+
+            if (activeTx) {
+                content.innerHTML = `
+                    <div style="margin-bottom: 12px;"><strong>รุ่น / โมเดล:</strong> ${asset.model_name || asset.computermodel || '-'}</div>
+                    <div style="margin-bottom: 12px;"><strong>Asset Tag:</strong> <span style="color:var(--aapico-green); font-weight:bold;">${asset.asset_tag}</span></div>
+                    <hr style="border-color: var(--border-subtle); margin: 16px 0;">
+                    <div style="margin-bottom: 12px;"><strong>ผู้ยืม:</strong> <span style="color:var(--color-primary); font-weight:bold;">${activeTx.borrower_name}</span></div>
+                    <div style="margin-bottom: 12px;"><strong>แผนก:</strong> ${activeTx.borrower_dept || '-'}</div>
+                    <div style="margin-bottom: 12px;"><strong>วันที่เริ่มยืม:</strong> ${formatDateOnly(activeTx.borrow_date)}</div>
+                    <div style="margin-bottom: 12px;"><strong>กำหนดคืน:</strong> <span style="color:var(--color-warning); font-weight:bold;">${formatDateOnly(activeTx.expected_return_date)}</span></div>
+                `;
+            } else {
+                content.innerHTML = `<p style="color:var(--color-warning);">ไม่พบข้อมูลผู้ยืมในขณะนี้ อาจอยู่ระหว่างการทำรายการ</p>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function selectComputer(asset) {
+            UserState.selectedAsset = asset;
+
+            // Update card visual selection
+            document.querySelectorAll('.computer-card').forEach(c => {
+                c.classList.remove('selected');
+                const btn = c.querySelector('.card-select-btn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> เลือกเครื่องนี้';
+            });
+            const selectedCard = document.querySelector(`.computer-card[data-id="${asset.id}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                const btn = selectedCard.querySelector('.card-select-btn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> เลือกแล้ว!';
+            }
+
+            // Populate form banner
+            document.getElementById('banner-model').textContent = asset.model_name;
+            document.getElementById('banner-tag').textContent = asset.asset_tag;
+            document.getElementById('banner-sn').textContent = asset.serial_number;
+            document.getElementById('form-asset-id').value = asset.id;
+
+            // Set default dates
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            const localISO = new Date(now - offset).toISOString().slice(0, 16);
+            document.getElementById('u-borrow-date').value = localISO;
+
+            const threeDays = new Date();
+            threeDays.setDate(now.getDate() + 3);
+            document.getElementById('u-return-date').value = threeDays.toISOString().split('T')[0];
+
+            // Go to step 2
+            setTimeout(() => goToStep(2), 200);
+        }
+
+        // ========== FORM SUBMISSION ==========
+
+        document.getElementById('user-borrow-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const assetId = document.getElementById('form-asset-id').value;
+            const fullName = document.getElementById('u-full-name').value.trim();
+            const empId = document.getElementById('u-employee-id').value.trim();
+            const dept = document.getElementById('u-department').value;
+            const phone = document.getElementById('u-phone').value.trim();
+            const borrowDate = document.getElementById('u-borrow-date').value;
+            const returnDate = document.getElementById('u-return-date').value;
+            const purpose = document.getElementById('u-purpose').value.trim();
+
+            // Client-side validation
+            if (!fullName || !empId || !dept || !borrowDate || !returnDate || !purpose) {
+                showToast('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ช่องที่มี *)', 'warning');
+                return;
+            }
+
+            if (!assetId || !UserState.selectedAsset) {
+                showToast('กรุณาเลือกเครื่องคอมพิวเตอร์ก่อนส่งฟอร์ม', 'warning');
+                return;
+            }
+
+            // Disable submit button (prevent double-submit)
+            const submitBtn = document.getElementById('btn-submit-borrow');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
+
+            try {
+                const res = await fetch('/api/borrow-request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        asset_id: assetId,
+                        employee_id: empId,
+                        full_name: fullName,
+                        department: dept,
+                        title: document.getElementById('u-title').value.trim(),
+                        company: document.getElementById('u-company').value.trim(),
+                        contact_number: phone,
+                        borrow_date: borrowDate,
+                        expected_return_date: returnDate,
+                        borrow_purpose: purpose
+                        // borrow_by_staff_id ไม่ส่ง — server จะ default เป็น 'staff-admin'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'การส่งข้อมูลล้มเหลว');
+                }
+
+                // Populate success screen
+                document.getElementById('sum-model').textContent = UserState.selectedAsset.model_name;
+                document.getElementById('sum-tag').textContent = UserState.selectedAsset.asset_tag;
+                document.getElementById('sum-name').textContent = fullName;
+                document.getElementById('sum-dept').textContent = dept;
+                document.getElementById('sum-return').textContent = formatDateOnly(returnDate);
+
+                goToStep(3);
+
+            } catch (err) {
+                console.error('Borrow submit error:', err);
+                showToast(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่หรือติดต่อ IT', 'danger', 5000);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันการขอยืมเครื่อง';
+            }
+        });
+
+        // ========== BUTTON EVENTS ==========
+
+        document.getElementById('btn-change-computer').addEventListener('click', () => goToStep(1));
+        document.getElementById('btn-back-to-select').addEventListener('click', () => goToStep(1));
+
+        document.getElementById('btn-borrow-another').addEventListener('click', () => {
+            // Reset state
+            UserState.selectedAsset = null;
+            document.getElementById('user-borrow-form').reset();
+            document.getElementById('btn-submit-borrow').disabled = false;
+            document.getElementById('btn-submit-borrow').innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันการขอยืมเครื่อง';
+
+            // Reload available list (equipment status may have changed)
+            const container = document.getElementById('category-sections-container');
+            if (container) {
+                container.style.display = 'none';
+                container.innerHTML = `
+                <div class="computers-grid" id="skeleton-grid">
+                    <div class="skeleton-card"><div class="skeleton-line tall"></div><div class="skeleton-line medium"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-line tall"></div><div class="skeleton-line medium"></div></div>
+                </div>`;
+            }
+
+            goToStep(1);
+            loadAvailableComputers();
+        });
+
+        // ========== QR SCAN URL HANDLING ==========
+        // รองรับเมื่อพนักงานสแกน QR code แล้ว redirect มาที่ user.html?scan=ASSET-TAG
+
+        async function checkQRScanParam() {
+            const params = new URLSearchParams(window.location.search);
+            const scannedTag = params.get('scan');
+            if (!scannedTag) return;
+
+            // Clear URL param
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            showToast(`กำลังค้นหาเครื่อง: ${scannedTag}...`, 'success', 2000);
+
+            try {
+                const res = await fetch(`/api/assets?search=${encodeURIComponent(scannedTag)}`);
+                const assets = await res.json();
+                const asset = assets.find(a => a.asset_tag.toLowerCase() === scannedTag.trim().toLowerCase());
+
+                if (!asset) {
+                    showToast(`ไม่พบเครื่อง "${scannedTag}" ในระบบ`, 'danger', 5000);
+                    return;
+                }
+
+                if (asset.usage_type !== 'Rental' || asset.status !== 'Available') {
+                    showToast(`เครื่อง ${asset.asset_tag} ไม่ว่างในขณะนี้ (${asset.status})`, 'warning', 5000);
+                    return;
+                }
+
+                // Wait for the grid to load, then auto-select
+                setTimeout(() => {
+                    selectComputer(asset);
+                    showToast(`สแกนสำเร็จ! พบเครื่อง ${asset.asset_tag} — กรุณากรอกข้อมูลเพื่อยืม`, 'success', 4000);
+                }, 800);
+
+            } catch (err) {
+                console.error('QR scan lookup error:', err);
+                showToast('เกิดข้อผิดพลาดในการค้นหาเครื่องจาก QR Code', 'danger');
+            }
+        }
+
+        // ========== AD INTEGRATION ==========
+
+        async function fetchAdDepartmentsUser() {
+            try {
+                const res = await fetch('/api/ad-departments');
+                if (res.ok) {
+                    const depts = await res.json();
+                    const deptSelect = document.getElementById('u-department');
+                    if (deptSelect && depts && Array.isArray(depts)) {
+                        deptSelect.innerHTML = '<option value="" disabled selected>เลือกแผนก/ฝ่ายสังกัด</option>';
+                        depts.forEach(dept => {
+                            if (dept) {
+                                deptSelect.add(new Option(dept, dept));
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load AD departments', err);
+                const deptSelect = document.getElementById('u-department');
+                if (deptSelect) {
+                    deptSelect.innerHTML = '<option value="" disabled selected>พิมพ์ข้อมูลแผนกตอนค้นหาพนักงาน</option>';
+                }
+            }
+        }
+
+        document.getElementById('u-ad-search-btn')?.addEventListener('click', async () => {
+            const empIdInput = document.getElementById('u-employee-id');
+            const searchVal = empIdInput.value.trim();
+            if (!searchVal) {
+                showToast('กรุณากรอกรหัสพนักงานก่อนค้นหา', 'warning');
+                empIdInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('u-ad-search-btn');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังค้นหา...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/ad-user?q=${encodeURIComponent(searchVal)}`);
+                const data = await res.json();
+
+                if (res.ok && Array.isArray(data) && data.length > 0) {
+                    const user = data[0];
+                    document.getElementById('u-full-name').value = user.displayName || user.cn || '';
+
+                    const deptSelect = document.getElementById('u-department');
+                    const adDept = user.department || '';
+                    if (adDept) {
+                        let exactMatch = Array.from(deptSelect.options).find(opt => opt.value === adDept);
+                        if (exactMatch) {
+                            exactMatch.text = adDept;
+                        } else {
+                            deptSelect.add(new Option(adDept, adDept));
+                        }
+                        deptSelect.value = adDept;
+                    }
+
+                    document.getElementById('u-title').value = user.title || '';
+                    document.getElementById('u-company').value = user.company || '';
+
+                    showToast(`พบข้อมูล: ${user.displayName || user.cn}`, 'success');
+                } else {
+                    showToast('ไม่พบข้อมูลพนักงานในระบบ AD', 'danger');
+                }
+            } catch (err) {
+                console.error('AD Search failed:', err);
+                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ AD', 'danger');
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        });
+
+        // ========== BOOT ==========
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Modal events
+            const closeBtn = document.getElementById('close-rental-modal');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    document.getElementById('rental-detail-modal').style.display = 'none';
+                });
+            }
+
+            // --- Populate user info bar ---
+            const authUser = getAuthUser();
+            if (authUser) {
+                const nameEl = document.getElementById('user-display-name');
+                const usernameEl = document.getElementById('user-username-display');
+                const roleEl = document.getElementById('user-role-display');
+                const avatarEl = document.getElementById('user-avatar-initials');
+
+                const displayName = authUser.full_name || authUser.username || 'ผู้ใช้งาน';
+                const roleLabel = authUser.role === 'admin' ? 'เจ้าหน้าที่ IT (Admin)' : 'พนักงาน (User)';
+                const initials = displayName
+                    .trim()
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(w => w[0].toUpperCase())
+                    .join('');
+
+                if (nameEl) nameEl.textContent = displayName;
+                if (usernameEl) usernameEl.textContent = authUser.username ? `@${authUser.username}` : '';
+                if (roleEl) roleEl.textContent = roleLabel;
+                if (avatarEl) avatarEl.textContent = initials || 'IT';
+            }
+
+            await fetchAdDepartmentsUser();
+            await loadAvailableComputers();
+            await checkQRScanParam();
+
+            // Setup SSE for real-time updates without F5
+            const sse = new EventSource('/api/events');
+            sse.onmessage = async (event) => {
+                if (event.data === 'update') {
+                    await loadAvailableComputers();
+                }
+            };
+
+            // Live Countdown Timer for Rejected Assets
+            setInterval(() => {
+                document.querySelectorAll('.computer-card[data-rejected-at]').forEach(card => {
+                    const countdownEl = card.querySelector('.reject-countdown');
+                    if (!countdownEl) return;
+
+                    const rejectedAt = new Date(card.getAttribute('data-rejected-at')).getTime();
+                    const now = Date.now();
+                    const diff = rejectedAt + 10 * 60 * 1000 - now; // 10 minutes
+
+                    if (diff > 0) {
+                        const mins = Math.floor(diff / 60000);
+                        const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                        countdownEl.innerHTML = `<i class="fa-solid fa-clock"></i> ปลดล็อคใน ${mins}:${secs}`;
+                    } else {
+                        countdownEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังคืนสู่ระบบ...`;
+                    }
+                });
+            }, 1000);
+
+            // Fetch user data right away
+            fetchUserContext();
+        });
+    </script>
+</body>
+
+</html>

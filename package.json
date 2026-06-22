@@ -1,0 +1,22 @@
+{
+  "name": "it-asset-rental-system",
+  "version": "1.0.0",
+  "description": "IT Asset & Rental Management System - Full Stack Node.js + Express + SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.18.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "ldapjs": "^3.0.7",
+    "mysql2": "^3.22.5",
+    "nodemailer": "^9.0.1",
+    "sqlite3": "^5.1.7"
+  },
+  "author": "IT Department",
+  "license": "ISC"
+}
