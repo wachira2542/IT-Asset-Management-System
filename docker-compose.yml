@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: it-asset-rental-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/database.sqlite
+      # ดึงค่าตัวแปรอื่น ๆ จากไฟล์ .env อัตโนมัติ
+      - GLPI_API_URL=${GLPI_API_URL}
+      - GLPI_APP_TOKEN=${GLPI_APP_TOKEN}
+      - GLPI_USER_TOKEN=${GLPI_USER_TOKEN}
+      - GLPI_SPARE_STATE_ID=${GLPI_SPARE_STATE_ID}
+      - GLPI_DB_HOST=${GLPI_DB_HOST}
+      - GLPI_DB_USER=${GLPI_DB_USER}
+      - GLPI_DB_PASSWORD=${GLPI_DB_PASSWORD}
+      - GLPI_DB_NAME=${GLPI_DB_NAME}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - IT_DEPT_EMAIL=${IT_DEPT_EMAIL}
+      - SESSION_SECRET=${SESSION_SECRET:-replace_this_with_a_strong_secret}
+      - LOCAL_ADMIN_USERNAME=${LOCAL_ADMIN_USERNAME:-admin}
+      - LOCAL_ADMIN_PASSWORD=${LOCAL_ADMIN_PASSWORD:-it@apico4U}
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
