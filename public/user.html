@@ -1043,7 +1043,18 @@
             <!-- VIEW 1: Available Computers   -->
             <!-- ============================= -->
             <div class="view-panel active" id="view-select">
-                <!-- Actual Computers Grid (filled by JS) -->
+                
+                <!-- Tab Menu -->
+                <div class="category-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; margin-top: 10px;">
+                    <button class="btn btn-primary active-tab" id="tab-computers" style="border-radius: 20px; padding: 8px 24px; transition: all 0.3s ease;">
+                        <i class="fa-solid fa-laptop"></i> เครื่องคอมพิวเตอร์
+                    </button>
+                    <button class="btn btn-secondary" id="tab-accessories" style="border-radius: 20px; padding: 8px 24px; transition: all 0.3s ease; border-color: transparent;">
+                        <i class="fa-solid fa-keyboard"></i> อุปกรณ์ไอที (Accessories)
+                    </button>
+                </div>
+
+                <!-- Actual Computers/Accessories Grid (filled by JS) -->
                 <div id="category-sections-container" style="display:none; margin-top: 10px;"></div>
             </div>
 
@@ -1247,7 +1258,8 @@
         const UserState = {
             selectedAsset: null,
             availableAssets: [],
-            allTransactions: []
+            allTransactions: [],
+            currentTab: 'computers' // 'computers' or 'accessories'
         };
 
         // ========== UTILITIES ==========
@@ -1349,18 +1361,38 @@
             let totalAvailable = 0;
             let totalRented = 0;
 
-            const categories = [
-                { id: 'notebook', name: 'Laptop / Notebook', match: ['laptop', 'notebook'] },
-                { id: 'desktop', name: 'Desktop PC', match: ['desktop', 'pc'] },
-                { id: 'workstation', name: 'Workstation', match: ['workstation'] }
-            ];
+            let categories = [];
+            
+            if (UserState.currentTab === 'computers') {
+                categories = [
+                    { id: 'notebook', name: 'Laptop / Notebook', match: ['laptop', 'notebook'] },
+                    { id: 'desktop', name: 'Desktop PC', match: ['desktop', 'pc'] },
+                    { id: 'workstation', name: 'Workstation', match: ['workstation'] }
+                ];
+            } else {
+                categories = [
+                    { id: 'mouse', name: 'Mouse (เมาส์)', match: ['mouse', 'เมาส์'] },
+                    { id: 'keyboard', name: 'Keyboard (คีย์บอร์ด)', match: ['keyboard', 'คีย์บอร์ด'] },
+                    { id: 'cable', name: 'Cable & Adapter (สายเคเบิล/อะแดปเตอร์)', match: ['cable', 'adapter', 'hdmi', 'vga', 'สาย'] },
+                    { id: 'monitor', name: 'Monitor (จอมอนิเตอร์)', match: ['monitor', 'display', 'จอ'] },
+                    { id: 'other', name: 'Other Accessories (อื่นๆ)', match: ['other', 'accessory', 'accessories', 'อุปกรณ์'] }
+                ];
+            }
 
             categories.forEach(cat => {
                 const catAssets = assets.filter(a => {
-                    // กรองตาม category และตรวจสอบ location ว่ามีคำว่า IT Store
+                    // สำหรับ accessories, บางครั้งอาจไม่มี location ว่า IT Store ก็ได้ (เผื่อตั้งค่าผิด) แต่เรายึดตามหมวดหมู่หลักๆ หรือถ้าเป็น other ต้องไม่ match คอมพิวเตอร์
                     const c = (a.category || a.computertype || '').toLowerCase();
                     const loc = (a.location || '').toLowerCase();
                     const isItStore = loc.includes('it store');
+                    
+                    if (UserState.currentTab === 'accessories' && cat.id === 'other') {
+                        // For 'other', just catch anything that is NOT a computer and not matched by other accessory tabs
+                        const isComputer = ['laptop', 'notebook', 'desktop', 'pc', 'workstation'].some(m => c.includes(m));
+                        const isMatchedOtherAccessories = ['mouse', 'เมาส์', 'keyboard', 'คีย์บอร์ด', 'cable', 'adapter', 'hdmi', 'vga', 'สาย', 'monitor', 'display', 'จอ'].some(m => c.includes(m));
+                        return !isComputer && !isMatchedOtherAccessories && isItStore;
+                    }
+                    
                     return cat.match.some(m => c.includes(m)) && isItStore;
                 });
 
@@ -1435,7 +1467,7 @@
 
                     if (isPending) {
                         card.style.opacity = '0.7';
-                        card.style.borderColor = 'var(--aapico-blue)';
+                        card.style.borderColor = 'var(--color-purple, #a855f7)';
                     }
 
                     card.innerHTML = `
@@ -1446,7 +1478,7 @@
                             ${isAvailable
                             ? `<span class="card-available-dot">ว่างอยู่</span>`
                             : isRented ? `<span class="card-available-dot" style="color:var(--color-warning);"><i class="fa-solid fa-clock"></i> ถูกยืม</span>`
-                                : isPending ? `<span class="card-available-dot" style="color:var(--aapico-blue);"><i class="fa-solid fa-spinner fa-spin"></i> In-Process</span>`
+                                : isPending ? `<span class="card-available-dot" style="color:var(--color-purple, #a855f7);"><i class="fa-solid fa-spinner fa-spin"></i> In-Process</span>`
                                     : isRejected ? `<span class="card-available-dot" style="color:var(--color-danger);"><i class="fa-solid fa-xmark"></i> Rejected</span>` : ''
                         }
                         </div>
@@ -1631,6 +1663,39 @@
         });
 
         // ========== BUTTON EVENTS ==========
+
+        // Tab Switching
+        document.getElementById('tab-computers').addEventListener('click', (e) => {
+            if (UserState.currentTab === 'computers') return;
+            UserState.currentTab = 'computers';
+            
+            const btnComputers = document.getElementById('tab-computers');
+            const btnAccessories = document.getElementById('tab-accessories');
+            
+            btnComputers.className = 'btn btn-primary active-tab';
+            btnComputers.style.borderColor = '';
+            
+            btnAccessories.className = 'btn btn-secondary';
+            btnAccessories.style.borderColor = 'transparent';
+            
+            renderCategoryGroups(UserState.availableAssets);
+        });
+
+        document.getElementById('tab-accessories').addEventListener('click', (e) => {
+            if (UserState.currentTab === 'accessories') return;
+            UserState.currentTab = 'accessories';
+            
+            const btnComputers = document.getElementById('tab-computers');
+            const btnAccessories = document.getElementById('tab-accessories');
+            
+            btnAccessories.className = 'btn btn-primary active-tab';
+            btnAccessories.style.borderColor = '';
+            
+            btnComputers.className = 'btn btn-secondary';
+            btnComputers.style.borderColor = 'transparent';
+            
+            renderCategoryGroups(UserState.availableAssets);
+        });
 
         document.getElementById('btn-change-computer').addEventListener('click', () => goToStep(1));
         document.getElementById('btn-back-to-select').addEventListener('click', () => goToStep(1));

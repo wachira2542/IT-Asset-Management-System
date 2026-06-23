@@ -516,10 +516,16 @@ app.get('/api/assets', requireAuth(['admin', 'user']), async (req, res) => {
         await db.query.run(`
             UPDATE assets
             SET status = 'Available'
-            WHERE status = 'Rejected' AND id IN (
+            WHERE status = 'Rejected' AND id NOT IN (
                 SELECT asset_id FROM borrow_requests
-                WHERE status = 'Rejected' AND datetime(rejected_at) <= datetime('now', '-10 minutes')
+                WHERE status = 'Rejected' AND datetime(rejected_at) > datetime('now', '-10 minutes')
             )
+        `);
+        // Also clean up old rejected requests to Expired
+        await db.query.run(`
+            UPDATE borrow_requests
+            SET status = 'Expired'
+            WHERE status = 'Rejected' AND datetime(rejected_at) <= datetime('now', '-10 minutes')
         `);
 
         // Fetch assets with latest reject_reason if applicable
@@ -786,9 +792,9 @@ app.get('/api/user/assets', requireAuth(['admin', 'user']), async (req, res) => 
         await db.query.run(`
             UPDATE assets
             SET status = 'Available'
-            WHERE status = 'Rejected' AND id IN (
+            WHERE status = 'Rejected' AND id NOT IN (
                 SELECT asset_id FROM borrow_requests
-                WHERE status = 'Rejected' AND datetime(rejected_at) <= datetime('now', '-10 minutes')
+                WHERE status = 'Rejected' AND datetime(rejected_at) > datetime('now', '-10 minutes')
             )
         `);
         // Also reset the borrow_requests status for those auto-reset assets
@@ -1058,6 +1064,39 @@ app.post('/api/borrow-requests/:id/reject', requireAuth(['admin']), async (req, 
 
         await db.query.exec('COMMIT;');
         
+        // Setup Email Sending Variables
+        let borrowerEmail = null;
+        let assetInfo = await db.query.get('SELECT * FROM assets WHERE id = ?', [request.asset_id]);
+        
+        // Find user email from AD
+        try {
+            const adminClient = createLdapClient();
+            await bindLdapClient(adminClient, LDAP_CONFIG.adminDN, LDAP_CONFIG.adminPassword, 'admin');
+            const ldapUser = await searchLdapUser(adminClient, request.employee_id);
+            if (ldapUser && ldapUser.mail) {
+                borrowerEmail = ldapUser.mail;
+            }
+            adminClient.unbind(() => {});
+        } catch (ldapErr) {
+            console.error('Could not fetch email from AD for borrower:', ldapErr.message);
+        }
+
+        // Try getting it from DB users if AD failed or not present
+        if (!borrowerEmail) {
+            const dbUser = await db.query.get('SELECT email FROM users WHERE username = ? OR id = ?', [request.employee_id, request.employee_id]);
+            if (dbUser && dbUser.email) borrowerEmail = dbUser.email;
+        }
+
+        // Add the rejected reason to request data for the email template
+        request.reject_reason = reject_reason;
+
+        // Send notification email asynchronously (don't block the response)
+        if (assetInfo) {
+            mailer.sendRejectionEmail(request, assetInfo, borrowerEmail).catch(err => {
+                console.error("Failed to send rejection email:", err);
+            });
+        }
+
         broadcastEvent('update');
         res.status(200).json({ success: true, message: 'Request rejected successfully.' });
     } catch (err) {
