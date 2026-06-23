@@ -1600,6 +1600,6 @@ app.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`IT Asset & Rental System is running!`);
     console.log(`Live Frontend URL: http://localhost:${PORT}`);
-    console.log(`SQLite database file loaded: ./database.sqlite`);
+    console.log(`SQLite database file loaded: ./data/database.sqlite`);
     console.log(`====================================================`);
 });
