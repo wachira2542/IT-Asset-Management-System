@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: it-asset-rental-app
+    container_name: it-asset-management-app
     restart: always
     ports:
       - "3000:3000"
