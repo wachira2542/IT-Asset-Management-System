@@ -55,7 +55,7 @@ async function sendApprovalEmail(requestData, assetData, toEmail) {
   const mailOptions = {
     from: `"IT Asset Hub" <${fromEmail}>`,
     to: recipient,
-    //cc: ccRecipient,
+    cc: ccRecipient,
     subject: `[IT Asset Hub] อนุมัติการยืมอุปกรณ์: ${assetData.model_name}`,
     html: `
 <!DOCTYPE html>
@@ -168,7 +168,7 @@ async function sendRejectionEmail(requestData, assetData, toEmail) {
   const mailOptions = {
     from: `"IT Asset Hub" <${fromEmail}>`,
     to: recipient,
-    //cc: ccRecipient,
+    cc: ccRecipient,
     subject: `[IT Asset Hub] แจ้งผลคำขอยืมอุปกรณ์: ไม่อนุมัติ (${assetData ? assetData.model_name : 'Unknown'})`,
     html: `
 <!DOCTYPE html>

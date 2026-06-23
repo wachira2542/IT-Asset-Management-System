@@ -7,6 +7,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    networks:
+      - proxy-tier
+      - default
     environment:
       - NODE_ENV=production
       - DATABASE_PATH=/app/data/database.sqlite
@@ -33,3 +36,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  proxy-tier:
+    external: true
+    name: global-proxy-net
