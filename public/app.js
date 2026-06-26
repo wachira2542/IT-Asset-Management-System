@@ -9,7 +9,7 @@ const AppState = {
     activeFilters: {
         techGroup: 'all',
         usageType: 'all',
-        status: 'Available',
+        status: 'all',
         searchQuery: ''
     },
     qrCodeInstance: null,
@@ -374,7 +374,7 @@ async function renderDashboard() {
         
         // Compute KPIs
         const deploymentReady = assets.filter(a => a.usage_type === 'Deployment' && a.status === 'Available').length;
-        const rentalAvailable = assets.filter(a => a.usage_type === 'Rental' && a.status === 'Available').length;
+        const rentalAvailable = assets.filter(a => a.usage_type === 'Rental' && a.status === 'Available' && (a.location || '').toLowerCase().includes('it store')).length;
         const rentalRented = assets.filter(a => a.usage_type === 'Rental' && a.status === 'Rented').length;
         
         if (UI.kpiTotalAssets) UI.kpiTotalAssets.textContent = assets.length;
@@ -518,6 +518,56 @@ async function renderAssetsList() {
     }
 }
 
+// 5.2.2 ACCESSORIES LIST RENDERER
+async function renderAccessoriesList() {
+    try {
+        const accessories = await apiGet('/api/accessories');
+        const tbody = document.getElementById('accessories-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        if (accessories.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 40px;">ไม่มีข้อมูลอุปกรณ์เสริมในระบบ</td></tr>';
+            return;
+        }
+
+        accessories.forEach(acc => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="font-semibold text-primary clickable-accessory" data-id="${acc.id}" data-name="${acc.name}" style="cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-link" style="font-size: 0.8em; margin-right: 4px;"></i>${acc.name}</span></td>
+                <td><span class="status-badge" style="background: rgba(56, 189, 248, 0.15); color: var(--color-primary);">${acc.total_stock}</span></td>
+                <td><span class="status-badge" style="background: ${acc.available_stock > 0 ? 'rgba(34, 197, 94, 0.15); color: var(--color-success)' : 'rgba(239, 68, 68, 0.15); color: var(--color-danger)'}">${acc.available_stock}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-accent btn-small edit-accessory-btn" data-id="${acc.id}" data-name="${acc.name}" data-total="${acc.total_stock}" title="แก้ไขข้อมูล">
+                        <i class="fa-solid fa-pen-to-square"></i> แก้ไขสต็อค
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.edit-accessory-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const name = e.currentTarget.getAttribute('data-name');
+                const total = e.currentTarget.getAttribute('data-total');
+                openAddAccessoryModal(id, name, total);
+            });
+        });
+
+        document.querySelectorAll('.clickable-accessory').forEach(span => {
+            span.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const name = e.currentTarget.getAttribute('data-name');
+                openAccessoryHistoryModal(id, name);
+            });
+        });
+
+    } catch (err) {
+        console.error('Failed to load accessories list:', err);
+    }
+}
+
 // 5.2.5 APPROVALS TAB RENDERER
 async function renderApprovalsTab() {
     try {
@@ -585,8 +635,69 @@ async function renderApprovalsTab() {
         
         bindInteractiveTags();
 
+        // Load Accessory Approvals too
+        await renderAccessoryApprovals();
+
     } catch (err) {
         console.error('Error fetching pending approvals:', err);
+    }
+}
+
+// 5.2.6 ACCESSORY APPROVALS RENDERER
+async function renderAccessoryApprovals() {
+    try {
+        const tbody = document.getElementById('accessory-approvals-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>';
+        
+        const pending = await apiGet('/api/accessories/requests');
+        
+        // Update badge combining both
+        const badge = document.getElementById('nav-badge-approvals');
+        if (badge) {
+            const currentCount = parseInt(badge.textContent) || 0;
+            const newCount = currentCount + pending.length;
+            if (newCount > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = newCount;
+            }
+        }
+        
+        if (pending.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">ไม่มีรายการรออนุมัติ</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        pending.forEach(req => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="status-badge" style="background: rgba(56, 189, 248, 0.15); color: var(--color-primary); border: 1px solid rgba(56, 189, 248, 0.3);"><i class="fa-regular fa-calendar-plus" style="margin-right: 4px;"></i>${formatDateTime(req.created_at)}</span></td>
+                <td><span class="font-semibold text-primary">${req.accessory_name}</span></td>
+                <td><span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--color-warning);">${req.quantity}</span></td>
+                <td>
+                    <div class="font-semibold">${req.full_name}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">${req.department}</div>
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn btn-primary btn-small btn-manage-accessory-approval" data-id="${req.id}">
+                        <i class="fa-solid fa-tasks"></i> จัดการ
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-manage-accessory-approval').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const reqId = e.currentTarget.getAttribute('data-id');
+                const reqData = pending.find(p => p.id == reqId);
+                if (reqData) openAccessoryApprovalModal(reqData);
+            });
+        });
+
+    } catch (err) {
+        console.error('Error fetching pending accessory approvals:', err);
     }
 }
 
@@ -740,6 +851,8 @@ async function switchTab(tabId) {
         await renderAssetsList();
     } else if (tabId === 'transactions') {
         await renderTransactionsLog();
+    } else if (tabId === 'accessories') {
+        await renderAccessoriesList();
     } else if (tabId === 'scanner') {
         // scanner tab active (no simulator dropdown)
     }
@@ -1403,7 +1516,7 @@ UI.stopCameraBtn.addEventListener('click', stopWebcamScanner);
 async function showAvailableRentalsModal() {
     try {
         const assets = await apiGet('/api/assets');
-        const availableRentals = assets.filter(a => a.usage_type === 'Rental' && a.status === 'Available');
+        const availableRentals = assets.filter(a => a.usage_type === 'Rental' && a.status === 'Available' && (a.location || '').toLowerCase().includes('it store'));
         
         UI.availableAssetsModalTbody.innerHTML = '';
         
@@ -1624,6 +1737,37 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    sse.addEventListener('new_accessory_request', (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            const msg = `
+                <div style="text-align:left;">
+                    <div style="font-weight:bold; margin-bottom:4px;"><i class="fa-solid fa-bell"></i> มีคำขอเบิกอุปกรณ์เสริมใหม่!</div>
+                    <div style="font-size:0.85rem;">
+                        <strong>ผู้เบิก:</strong> ${data.full_name} (แผนก ${data.department})<br>
+                        <strong>เหตุผล:</strong> ${data.borrow_purpose}
+                    </div>
+                </div>
+            `;
+            showToast(msg, 'success', 8000);
+
+            // Add to notification state
+            AppState.notifications.unshift({
+                id: data.id,
+                type: 'accessory_request',
+                ...data,
+                time: new Date().toLocaleTimeString('th-TH')
+            });
+            AppState.unreadNotifications++;
+            renderNotifications();
+            renderApprovalsTab();
+
+        } catch (e) {
+            console.error('Failed to parse accessory notification', e);
+        }
+    });
+
+
     // ========== NOTIFICATION DROPDOWN LOGIC ==========
     const notifBtn = document.getElementById('header-notification-btn');
     const notifDropdown = document.getElementById('notification-dropdown');
@@ -1652,6 +1796,19 @@ window.addEventListener('DOMContentLoaded', async () => {
                             });
                         }
                     });
+
+                    // Fetch pending accessory requests
+                    const pendingAccessories = await apiGet('/api/accessories/requests');
+                    pendingAccessories.forEach(p => {
+                        if (p.status === 'Pending' && !AppState.notifications.find(n => n.id === p.id)) {
+                            AppState.notifications.push({
+                                type: 'accessory_request',
+                                ...p,
+                                time: formatDateTime(p.created_at)
+                            });
+                        }
+                    });
+
                     // Sort by time
                     AppState.notifications.sort((a, b) => new Date(b.created_at || b.time) - new Date(a.created_at || a.time));
                 } catch (err) {
@@ -1716,17 +1873,31 @@ window.addEventListener('DOMContentLoaded', async () => {
             item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.05)';
             item.onmouseout = () => item.style.background = 'transparent';
             
+            let titleHTML = '';
+            let subtitleHTML = '';
+            let iconHTML = '';
+
+            if (n.type === 'accessory_request') {
+                iconHTML = '<i class="fa-solid fa-keyboard"></i>';
+                titleHTML = `${n.full_name || n.borrower_name} <span style="font-weight: 400; color: var(--color-text-muted);">ขอเบิกอุปกรณ์เสริม</span>`;
+                subtitleHTML = `${n.accessory_name || 'อุปกรณ์เสริม'} (จำนวน: ${n.quantity})`;
+            } else {
+                iconHTML = '<i class="fa-solid fa-clipboard-question"></i>';
+                titleHTML = `${n.full_name || n.borrower_name} <span style="font-weight: 400; color: var(--color-text-muted);">ขออนุมัติยืมเครื่อง</span>`;
+                subtitleHTML = n.asset_tag || n.asset_id;
+            }
+
             item.innerHTML = `
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                     <div style="background: var(--color-warning-glow); color: var(--color-warning); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fa-solid fa-clipboard-question"></i>
+                        ${iconHTML}
                     </div>
                     <div>
                         <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px;">
-                            ${n.full_name || n.borrower_name} <span style="font-weight: 400; color: var(--color-text-muted);">ขออนุมัติยืมเครื่อง</span>
+                            ${titleHTML}
                         </div>
                         <div style="color: var(--color-primary); font-family: var(--font-heading); font-size: 0.8rem; margin-bottom: 4px;">
-                            ${n.asset_tag || n.asset_id}
+                            ${subtitleHTML}
                         </div>
                         <div style="color: var(--color-text-secondary); font-size: 0.75rem;">
                             ${n.borrow_purpose || n.purpose}
@@ -1740,7 +1911,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
             item.addEventListener('click', () => {
                 notifDropdown.style.display = 'none';
-                if (n.type === 'borrow_request' || n.status === 'Pending') {
+                if (n.type === 'borrow_request' || n.type === 'accessory_request' || n.status === 'Pending') {
                     const navBtn = document.querySelector('.nav-item[data-target="approvals"]');
                     if (navBtn) navBtn.click();
                 } else if (n.asset_id) {
@@ -1828,6 +1999,103 @@ window.addEventListener('DOMContentLoaded', async () => {
             if (AppState.currentTab === 'dashboard') renderDashboard();
             if (AppState.currentTab === 'assets') renderAssetsList();
             renderApprovalsTab();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> ไม่อนุมัติ (Reject)';
+        }
+    });
+
+    // ========== ACCESSORIES LOGIC ==========
+    const addAccessoryModal = document.getElementById('add-accessory-modal');
+    
+    window.openAddAccessoryModal = function(id = '', name = '', totalStock = '') {
+        document.getElementById('accessory-id').value = id;
+        document.getElementById('accessory-name').value = name;
+        document.getElementById('accessory-total-stock').value = totalStock;
+        document.getElementById('add-accessory-modal-title').innerHTML = id ? '<i class="fa-solid fa-pen"></i> แก้ไขอุปกรณ์เสริม' : '<i class="fa-solid fa-keyboard"></i> เพิ่มอุปกรณ์เสริมใหม่';
+        if (addAccessoryModal) openModal(addAccessoryModal);
+    };
+
+    document.getElementById('add-accessory-btn')?.addEventListener('click', () => {
+        openAddAccessoryModal();
+    });
+
+    document.getElementById('add-accessory-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            id: document.getElementById('accessory-id').value,
+            name: document.getElementById('accessory-name').value,
+            total_stock: document.getElementById('accessory-total-stock').value
+        };
+        try {
+            await apiPost('/api/accessories', payload);
+            showToast('บันทึกข้อมูลสำเร็จ', 'success');
+            closeModal(addAccessoryModal);
+            if (AppState.currentTab === 'accessories') renderAccessoriesList();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    // ========== ACCESSORY APPROVAL LOGIC ==========
+    const accessoryApprovalModal = document.getElementById('accessory-request-approval-modal');
+
+    window.openAccessoryApprovalModal = function(reqData) {
+        document.getElementById('accessory-approval-request-id').value = reqData.id;
+        document.getElementById('accessory-approval-name').textContent = reqData.accessory_name;
+        document.getElementById('accessory-approval-quantity').textContent = reqData.quantity;
+        document.getElementById('accessory-approval-date').textContent = formatDateTime(reqData.created_at);
+        
+        document.getElementById('accessory-approval-borrower-name').textContent = reqData.full_name;
+        document.getElementById('accessory-approval-borrower-id').textContent = reqData.employee_id;
+        document.getElementById('accessory-approval-borrower-dept').textContent = reqData.department;
+        document.getElementById('accessory-approval-purpose').textContent = reqData.borrow_purpose;
+
+        if (accessoryApprovalModal) openModal(accessoryApprovalModal);
+    };
+
+    document.getElementById('accessory-approval-approve-btn')?.addEventListener('click', async () => {
+        const reqId = document.getElementById('accessory-approval-request-id').value;
+        const btn = document.getElementById('accessory-approval-approve-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ...';
+        
+        try {
+            await apiPost('/api/accessories/requests/' + reqId + '/approve', {});
+            showToast('อนุมัติการเบิกอุปกรณ์เสริมสำเร็จ', 'success');
+            if (accessoryApprovalModal) closeModal(accessoryApprovalModal);
+            renderAccessoryApprovals();
+            if (AppState.currentTab === 'accessories') renderAccessoriesList();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> อนุมัติ (Approve)';
+        }
+    });
+
+    document.getElementById('accessory-approval-reject-btn')?.addEventListener('click', async () => {
+        const reason = prompt('กรุณาระบุเหตุผลที่ไม่อนุมัติ:');
+        if (reason === null) return;
+        
+        if (!reason.trim()) {
+            alert('ต้องระบุเหตุผลที่ไม่อนุมัติ');
+            return;
+        }
+
+        const reqId = document.getElementById('accessory-approval-request-id').value;
+        const btn = document.getElementById('accessory-approval-reject-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังปฏิเสธ...';
+        
+        try {
+            await apiPost('/api/accessories/requests/' + reqId + '/reject', { reason: reason });
+            showToast('ปฏิเสธคำขอเบิกอุปกรณ์เสริมแล้ว', 'success');
+            if (accessoryApprovalModal) closeModal(accessoryApprovalModal);
+            renderAccessoryApprovals();
+            if (AppState.currentTab === 'accessories') renderAccessoriesList();
         } catch (err) {
             console.error(err);
         } finally {
@@ -1925,3 +2193,166 @@ if (btnRefreshGlpi) {
         }
     });
 }
+
+// ================= ACCESSORY MANAGEMENT MODALS =================
+
+window.openAddAccessoryModal = function(id = null, name = '', total = '') {
+    const modal = document.getElementById('add-accessory-modal');
+    if (!modal) return;
+    
+    document.getElementById('acc-id').value = id || '';
+    document.getElementById('acc-name').value = name;
+    document.getElementById('acc-total-stock').value = total;
+    
+    openModal(modal);
+};
+
+document.getElementById('add-accessory-btn')?.addEventListener('click', () => {
+    window.openAddAccessoryModal();
+});
+
+document.getElementById('add-accessory-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> บันทึก...';
+    btn.disabled = true;
+
+    const payload = {
+        id: document.getElementById('acc-id').value || null,
+        name: document.getElementById('acc-name').value.trim(),
+        total_stock: document.getElementById('acc-total-stock').value
+    };
+
+    try {
+        await apiPost('/api/accessories', payload);
+        showToast('บันทึกข้อมูลอุปกรณ์สำเร็จ', 'success');
+        closeModal(document.getElementById('add-accessory-modal'));
+        if (typeof renderAccessoriesList === 'function') renderAccessoriesList();
+    } catch (err) {
+        showToast(err.error || 'บันทึกไม่สำเร็จ', 'danger');
+    } finally {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+    }
+});
+
+window.openAccessoryApprovalModal = function(reqData) {
+    const modal = document.getElementById('accessory-approval-modal');
+    if (!modal) return;
+    
+    document.getElementById('acc-approve-req-id').value = reqData.id;
+    document.getElementById('acc-approve-name').textContent = reqData.full_name;
+    document.getElementById('acc-approve-dept').textContent = reqData.department;
+    document.getElementById('acc-approve-item').textContent = reqData.accessory_name;
+    document.getElementById('acc-approve-qty').textContent = reqData.quantity;
+    
+    document.getElementById('acc-approve-purpose').textContent = reqData.borrow_purpose;
+    
+    document.getElementById('acc-reject-reason-container').style.display = 'none';
+    document.getElementById('acc-reject-reason').value = '';
+    document.getElementById('btn-acc-reject-prompt').style.display = 'block';
+    document.getElementById('acc-reject-confirm-buttons').style.display = 'none';
+    
+    openModal(modal);
+};
+
+document.getElementById('btn-acc-reject-prompt')?.addEventListener('click', () => {
+    document.getElementById('acc-reject-reason-container').style.display = 'block';
+    document.getElementById('btn-acc-reject-prompt').style.display = 'none';
+    document.getElementById('acc-reject-confirm-buttons').style.display = 'flex';
+});
+
+document.getElementById('btn-acc-cancel-reject')?.addEventListener('click', () => {
+    document.getElementById('acc-reject-reason-container').style.display = 'none';
+    document.getElementById('btn-acc-reject-prompt').style.display = 'block';
+    document.getElementById('acc-reject-confirm-buttons').style.display = 'none';
+});
+
+document.getElementById('btn-acc-confirm-reject')?.addEventListener('click', async (e) => {
+    const reqId = document.getElementById('acc-approve-req-id').value;
+    const reason = document.getElementById('acc-reject-reason').value.trim();
+    if (!reason) {
+        showToast('กรุณาระบุเหตุผลที่ไม่อนุมัติ', 'warning');
+        return;
+    }
+
+    const btn = e.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่ง...';
+
+    try {
+        await apiPost(`/api/accessories/requests/${reqId}/reject`, { reason });
+        showToast('ปฏิเสธคำขอเบิกอุปกรณ์เรียบร้อยแล้ว', 'success');
+        closeModal(document.getElementById('accessory-approval-modal'));
+        if (typeof renderAccessoryApprovals === 'function') renderAccessoryApprovals();
+        if (typeof renderAccessoriesList === 'function') renderAccessoriesList();
+    } catch (err) {
+        showToast(err.error || 'เกิดข้อผิดพลาด', 'danger');
+    } finally {
+        btn.innerHTML = 'ยืนยันไม่อนุมัติ';
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('btn-acc-approve')?.addEventListener('click', async (e) => {
+    const reqId = document.getElementById('acc-approve-req-id').value;
+    
+    const btn = e.target;
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ...';
+
+    try {
+        await apiPost(`/api/accessories/requests/${reqId}/approve`, {});
+        showToast('อนุมัติการเบิกอุปกรณ์เรียบร้อยแล้ว', 'success');
+        closeModal(document.getElementById('accessory-approval-modal'));
+        if (typeof renderAccessoryApprovals === 'function') renderAccessoryApprovals();
+        if (typeof renderAccessoriesList === 'function') renderAccessoriesList();
+    } catch (err) {
+        showToast(err.error || 'เกิดข้อผิดพลาดในการอนุมัติ', 'danger');
+    } finally {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+    }
+});
+
+window.openAccessoryHistoryModal = async function(id, name) {
+    const modal = document.getElementById('accessory-history-modal');
+    if (!modal) return;
+    
+    document.getElementById('accessory-history-title').textContent = name;
+    const tbody = document.getElementById('accessory-history-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 30px;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</td></tr>';
+    
+    openModal(modal);
+    
+    try {
+        const history = await apiGet('/api/accessories/' + id + '/history');
+        tbody.innerHTML = '';
+        
+        if (history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 30px;">ยังไม่มีประวัติการเบิกอุปกรณ์นี้</td></tr>';
+            return;
+        }
+        
+        history.forEach(req => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${formatDateTime(req.created_at)}</td>
+                <td>
+                    <div class="font-semibold">${req.full_name}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">ID: ${req.employee_id}</div>
+                </td>
+                <td>${req.department}</td>
+                <td class="text-center"><span class="status-badge" style="background: rgba(56, 189, 248, 0.15); color: var(--color-primary);">${req.quantity}</span></td>
+                <td>${req.borrow_purpose || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger" style="padding: 30px;">เกิดข้อผิดพลาดในการดึงข้อมูล</td></tr>';
+        console.error(err);
+    }
+};

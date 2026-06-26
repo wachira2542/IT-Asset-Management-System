@@ -469,6 +469,7 @@ app.get('/api/events', requireAuth(['admin', 'user']), (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx proxy buffering for SSE
     res.flushHeaders();
 
     const clientId = Date.now();
@@ -571,7 +572,12 @@ app.get('/api/assets', requireAuth(['admin', 'user']), async (req, res) => {
             // Apply Filters
             if (tech_group && tech_group !== 'all' && comp.tech_group !== tech_group) continue;
             if (usage_type && usage_type !== 'all' && localAsset.usage_type !== usage_type) continue;
-            if (status && status !== 'all' && localAsset.status !== status) continue;
+            if (status && status !== 'all') {
+                if (localAsset.status !== status) continue;
+                if (status === 'Available' && !(comp.location || '').toLowerCase().includes('it store')) {
+                    continue;
+                }
+            }
             
             if (search) {
                 const s = search.toLowerCase();
@@ -613,6 +619,7 @@ app.get('/api/glpi/tech_groups', requireAuth(['admin', 'user']), async (req, res
             FROM glpi.glpi_computers b
             JOIN glpi.glpi_states s ON b.states_id = s.id
             JOIN glpi.glpi_groups g1 ON b.groups_id_tech = g1.id
+            LEFT JOIN glpi.glpi_locations l ON b.locations_id = l.id
             WHERE s.completename = 'spare' AND g1.completename IS NOT NULL AND b.is_deleted = 0
             ORDER BY g1.completename
         `);
@@ -1566,6 +1573,258 @@ app.post('/api/glpi/return', requireAuth(['admin', 'user']), async (req, res) =>
     }
 });
 
+
+// ================= ACCESSORIES API =================
+
+// Admin: Get all accessories
+app.get('/api/accessories', requireAuth(['admin']), async (req, res) => {
+    try {
+        const accessories = await db.query.all('SELECT * FROM accessories ORDER BY name ASC');
+        res.json(accessories);
+    } catch (err) {
+        console.error('Error fetching accessories:', err);
+        res.status(500).json({ error: 'Failed to retrieve accessories.' });
+    }
+});
+
+// Admin: Add or Update accessory stock
+app.post('/api/accessories', requireAuth(['admin']), async (req, res) => {
+    try {
+        const { id, name, total_stock } = req.body;
+        if (!name || total_stock === undefined) {
+            return res.status(400).json({ error: 'Name and total_stock are required.' });
+        }
+
+        if (id) {
+            const existing = await db.query.get('SELECT * FROM accessories WHERE id = ?', [id]);
+            if (!existing) return res.status(404).json({ error: 'Accessory not found.' });
+
+            const stockDiff = parseInt(total_stock) - existing.total_stock;
+            const newAvailable = existing.available_stock + stockDiff;
+
+            if (newAvailable < 0) {
+                return res.status(400).json({ error: 'Cannot reduce total stock below the amount currently requested/checked out.' });
+            }
+
+            await db.query.run(`
+                UPDATE accessories
+                SET name = ?, total_stock = ?, available_stock = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [name.trim(), parseInt(total_stock), newAvailable, id]);
+
+            broadcastEvent('update');
+            return res.status(200).json({ success: true });
+        } else {
+            const duplicate = await db.query.get('SELECT id FROM accessories WHERE name = ?', [name.trim()]);
+            if (duplicate) return res.status(409).json({ error: 'Accessory name already exists.' });
+
+            const newId = 'acc_' + Date.now();
+            await db.query.run(`
+                INSERT INTO accessories (id, name, total_stock, available_stock)
+                VALUES (?, ?, ?, ?)
+            `, [newId, name.trim(), parseInt(total_stock), parseInt(total_stock)]);
+
+            broadcastEvent('update');
+            res.status(201).json({ success: true, id: newId });
+        }
+    } catch (err) {
+        console.error('Error saving accessory:', err);
+        res.status(500).json({ error: 'Failed to save accessory.' });
+    }
+});
+
+// Admin: Get accessory requests
+app.get('/api/accessories/requests', requireAuth(['admin']), async (req, res) => {
+    try {
+        const requests = await db.query.all(`
+            SELECT ar.*, a.name as accessory_name
+            FROM accessory_requests ar
+            JOIN accessories a ON ar.accessory_id = a.id
+            WHERE ar.status = 'Pending'
+            ORDER BY ar.created_at DESC
+        `);
+        res.json(requests);
+    } catch (err) {
+        console.error('Error fetching accessory requests:', err);
+        res.status(500).json({ error: 'Failed to fetch accessory requests.' });
+    }
+});
+
+// Admin: Get accessory request history
+app.get('/api/accessories/:id/history', requireAuth(['admin']), async (req, res) => {
+    try {
+        const accId = req.params.id;
+        const history = await db.query.all(`
+            SELECT * FROM accessory_requests 
+            WHERE accessory_id = ? AND status = 'Approved'
+            ORDER BY created_at DESC
+        `, [accId]);
+        res.json(history);
+    } catch (err) {
+        console.error('Error fetching accessory history:', err);
+        res.status(500).json({ error: 'Failed to fetch history.' });
+    }
+});
+
+// Admin: Approve accessory request
+app.post('/api/accessories/requests/:id/approve', requireAuth(['admin']), async (req, res) => {
+    try {
+        const reqId = req.params.id;
+        const request = await db.query.get('SELECT * FROM accessory_requests WHERE id = ?', [reqId]);
+        if (!request) return res.status(404).json({ error: 'Request not found.' });
+        if (request.status !== 'Pending') return res.status(400).json({ error: 'Request is not pending.' });
+
+        // Update status
+        await db.query.run('UPDATE accessory_requests SET status = ? WHERE id = ?', ['Approved', reqId]);
+        
+        // Send Email
+        const accessory = await db.query.get('SELECT * FROM accessories WHERE id = ?', [request.accessory_id]);
+        let borrowerEmail = null;
+        try {
+            const adminClient = createLdapClient();
+            await bindLdapClient(adminClient, LDAP_CONFIG.adminDN, LDAP_CONFIG.adminPassword, 'admin');
+            const ldapUser = await searchLdapUser(adminClient, request.employee_id);
+            if (ldapUser && ldapUser.mail) {
+                borrowerEmail = ldapUser.mail;
+            }
+            adminClient.unbind(() => {});
+        } catch (ldapErr) {
+            console.error('Could not fetch email from AD for borrower:', ldapErr.message);
+        }
+        
+        if (!borrowerEmail) {
+            const dbUser = await db.query.get('SELECT email FROM users WHERE username = ? OR id = ?', [request.employee_id, request.employee_id]);
+            if (dbUser && dbUser.email) borrowerEmail = dbUser.email;
+        }
+
+        if (accessory) {
+            mailer.sendAccessoryApprovalEmail(request, accessory, borrowerEmail).catch(err => {
+                console.error("Failed to send accessory approval email:", err);
+            });
+        }
+
+        broadcastEvent('update');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error approving accessory request:', err);
+        res.status(500).json({ error: 'Failed to approve request.' });
+    }
+});
+
+// Admin: Reject accessory request
+app.post('/api/accessories/requests/:id/reject', requireAuth(['admin']), async (req, res) => {
+    try {
+        const reqId = req.params.id;
+        const { reason } = req.body;
+        const request = await db.query.get('SELECT * FROM accessory_requests WHERE id = ?', [reqId]);
+        
+        if (!request) return res.status(404).json({ error: 'Request not found.' });
+        if (request.status !== 'Pending') return res.status(400).json({ error: 'Request is not pending.' });
+
+        // Restore stock
+        await db.query.run('UPDATE accessories SET available_stock = available_stock + ? WHERE id = ?', [request.quantity, request.accessory_id]);
+        
+        // Update status
+        const nowString = new Date().toISOString();
+        await db.query.run(`
+            UPDATE accessory_requests 
+            SET status = 'Rejected', reject_reason = ?, rejected_at = ?
+            WHERE id = ?
+        `, [reason || 'ไม่ระบุเหตุผล', nowString, reqId]);
+        
+        // Send Email
+        const accessory = await db.query.get('SELECT * FROM accessories WHERE id = ?', [request.accessory_id]);
+        request.reject_reason = reason || 'ไม่ระบุเหตุผล';
+        
+        let borrowerEmail = null;
+        try {
+            const adminClient = createLdapClient();
+            await bindLdapClient(adminClient, LDAP_CONFIG.adminDN, LDAP_CONFIG.adminPassword, 'admin');
+            const ldapUser = await searchLdapUser(adminClient, request.employee_id);
+            if (ldapUser && ldapUser.mail) {
+                borrowerEmail = ldapUser.mail;
+            }
+            adminClient.unbind(() => {});
+        } catch (ldapErr) {
+            console.error('Could not fetch email from AD for borrower:', ldapErr.message);
+        }
+        
+        if (!borrowerEmail) {
+            const dbUser = await db.query.get('SELECT email FROM users WHERE username = ? OR id = ?', [request.employee_id, request.employee_id]);
+            if (dbUser && dbUser.email) borrowerEmail = dbUser.email;
+        }
+
+        if (accessory) {
+            mailer.sendAccessoryRejectionEmail(request, accessory, borrowerEmail).catch(err => {
+                console.error("Failed to send accessory rejection email:", err);
+            });
+        }
+
+        broadcastEvent('update');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error rejecting accessory request:', err);
+        res.status(500).json({ error: 'Failed to reject request.' });
+    }
+});
+
+// User: Get available accessories
+app.get('/api/user/accessories', requireAuth(['admin', 'user']), async (req, res) => {
+    try {
+        const accessories = await db.query.all('SELECT * FROM accessories WHERE available_stock > 0 ORDER BY name ASC');
+        res.json(accessories);
+    } catch (err) {
+        console.error('Error fetching user accessories:', err);
+        res.status(500).json({ error: 'Failed to retrieve available accessories.' });
+    }
+});
+
+// User: Submit accessory request
+app.post('/api/user/accessories/request', requireAuth(['admin', 'user']), async (req, res) => {
+    try {
+        const { accessory_id, employee_id, full_name, department, quantity, borrow_purpose } = req.body;
+        
+        if (!accessory_id || !employee_id || !full_name || !department || !quantity || !borrow_purpose) {
+            return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        }
+        
+        const q = parseInt(quantity);
+        if (q <= 0) return res.status(400).json({ error: 'จำนวนต้องมากกว่า 0' });
+
+        const accessory = await db.query.get('SELECT * FROM accessories WHERE id = ?', [accessory_id]);
+        if (!accessory) return res.status(404).json({ error: 'ไม่พบอุปกรณ์ที่เลือก' });
+
+        if (accessory.available_stock < q) {
+            return res.status(400).json({ error: 'ไม่มีอุปกรณ์คงเหลือในคลัง หรือไม่เพียงพอ' });
+        }
+
+        const newReqId = 'ar_' + Date.now();
+        
+        // Use an SQLite transaction to ensure atomicity
+        await db.query.exec('BEGIN TRANSACTION;');
+        
+        await db.query.run(`
+            UPDATE accessories SET available_stock = available_stock - ? WHERE id = ?
+        `, [q, accessory_id]);
+
+        await db.query.run(`
+            INSERT INTO accessory_requests (id, accessory_id, employee_id, full_name, department, quantity, borrow_purpose, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+        `, [newReqId, accessory_id, employee_id, full_name, department, q, borrow_purpose]);
+
+        await db.query.exec('COMMIT;');
+
+        const newReq = await db.query.get('SELECT ar.*, a.name as accessory_name FROM accessory_requests ar JOIN accessories a ON ar.accessory_id = a.id WHERE ar.id = ?', [newReqId]);
+        broadcastEvent('new_accessory_request', newReq);
+        
+        broadcastEvent('update');
+        res.status(201).json({ success: true, message: 'ส่งคำร้องขอเบิกอุปกรณ์สำเร็จ' });
+    } catch (err) {
+        await db.query.exec('ROLLBACK;');
+        console.error('Error submitting accessory request:', err);
+        res.status(500).json({ error: 'ระบบขัดข้อง ไม่สามารถส่งคำร้องได้' });
+    }
+});
 
 // ================= START SERVER =================
 // Active Auto-Reset for Rejected Assets

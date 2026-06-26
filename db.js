@@ -172,6 +172,36 @@ async function initializeSchema() {
             );
         `);
         
+        // 7. Accessories Table (Inventory)
+        await dbQuery.run(`
+            CREATE TABLE IF NOT EXISTS accessories (
+                id TEXT PRIMARY KEY,
+                name TEXT UNIQUE NOT NULL,
+                total_stock INTEGER DEFAULT 0,
+                available_stock INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 8. Accessory Requests Table
+        await dbQuery.run(`
+            CREATE TABLE IF NOT EXISTS accessory_requests (
+                id TEXT PRIMARY KEY,
+                accessory_id TEXT NOT NULL,
+                employee_id TEXT NOT NULL,
+                full_name TEXT NOT NULL,
+                department TEXT NOT NULL,
+                quantity INTEGER NOT NULL,
+                borrow_purpose TEXT NOT NULL,
+                status TEXT DEFAULT 'Pending',
+                reject_reason TEXT,
+                rejected_at TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (accessory_id) REFERENCES accessories(id)
+            );
+        `);
+
         console.log('Database tables created successfully.');
         
         // 4. Auto-seeding check

@@ -55,7 +55,7 @@ async function sendApprovalEmail(requestData, assetData, toEmail) {
   const mailOptions = {
     from: `"IT Asset Hub" <${fromEmail}>`,
     to: recipient,
-    cc: ccRecipient,
+    // cc: ccRecipient,
     subject: `[IT Asset Hub] อนุมัติการยืมอุปกรณ์: ${assetData.model_name}`,
     html: `
 <!DOCTYPE html>
@@ -168,7 +168,7 @@ async function sendRejectionEmail(requestData, assetData, toEmail) {
   const mailOptions = {
     from: `"IT Asset Hub" <${fromEmail}>`,
     to: recipient,
-    cc: ccRecipient,
+    // cc: ccRecipient,
     subject: `[IT Asset Hub] แจ้งผลคำขอยืมอุปกรณ์: ไม่อนุมัติ (${assetData ? assetData.model_name : 'Unknown'})`,
     html: `
 <!DOCTYPE html>
@@ -247,7 +247,192 @@ async function sendRejectionEmail(requestData, assetData, toEmail) {
   }
 }
 
+/**
+ * Sends an approval email for an accessory request to the borrower and CCs the IT department.
+ */
+async function sendAccessoryApprovalEmail(requestData, accessoryData, toEmail) {
+  console.log(`[Email System] Initiating accessory approval email process for: ${accessoryData.name}`);
+
+  if (!process.env.SMTP_HOST) {
+    console.warn('SMTP_HOST not configured in .env. Skipping email notification.');
+    return;
+  }
+
+  const ccEmail = process.env.IT_DEPT_EMAIL || 'itsupport@aapico.com';
+  const recipient = toEmail || ccEmail;
+  const ccRecipient = toEmail ? ccEmail : undefined;
+  const fromEmail = process.env.SMTP_USER || process.env.IT_DEPT_EMAIL || 'no-reply@aapico.com';
+
+  const mailOptions = {
+    from: `"IT Asset Hub" <${fromEmail}>`,
+    to: recipient,
+    // cc: ccRecipient,
+    subject: `[IT Asset Hub] อนุมัติการเบิกอุปกรณ์เสริม: ${accessoryData.name}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>การอนุมัติเบิกอุปกรณ์เสริม</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333333;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7f6; padding: 30px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #0c3365; padding: 30px; text-align: center; border-bottom: 4px solid #38bdf8;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">AAPICO IT ASSET HUB</h1><br>
+              <h3 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 1px;">Notification : Accessory Request Approved</h3>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #0c3365; margin-top: 0; font-size: 22px;">การอนุมัติเบิกอุปกรณ์เสริมสำเร็จแล้ว 🎉</h2>
+              <p style="font-size: 16px; line-height: 1.6; color: #555555;">เรียน คุณ <strong>${requestData.full_name}</strong>,</p>
+              <p style="font-size: 16px; line-height: 1.6; color: #555555;">คำร้องขอเบิกอุปกรณ์เสริมของท่านได้รับการอนุมัติเรียบร้อยแล้ว โดยมีรายละเอียดดังต่อไปนี้:</p>
+              
+              <table width="100%" border="0" cellspacing="0" cellpadding="14" style="margin-top: 25px; border-collapse: collapse; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;">
+                <tr>
+                  <td width="35%" style="border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #0c3365; background-color: #f8fafc;">รหัสพนักงาน</td>
+                  <td style="border-bottom: 1px solid #e0e0e0; color: #444444;">${requestData.employee_id}</td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #0c3365; background-color: #f8fafc;">อุปกรณ์ที่เบิก</td>
+                  <td style="border-bottom: 1px solid #e0e0e0; color: #444444;"><strong>${accessoryData.name}</strong></td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #0c3365; background-color: #f8fafc;">จำนวน</td>
+                  <td style="border-bottom: 1px solid #e0e0e0; color: #444444;">${requestData.quantity} ชิ้น</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: 600; color: #0c3365; background-color: #f8fafc;">วัตถุประสงค์</td>
+                  <td style="color: #444444;">${requestData.borrow_purpose}</td>
+                </tr>
+              </table>
+
+              <div style="background-color: #fdf8e4; border-left: 4px solid #f59e0b; padding: 15px 20px; margin-top: 30px; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px; color: #b45309; font-weight: 600;">โปรดติดต่อฝ่าย IT เพื่อรับอุปกรณ์ของท่าน</p>
+              </div>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f4f7f6; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0; font-size: 12px; color: #888888;">นี่คืออีเมลอัตโนมัติจากระบบ IT Asset Hub กรุณาอย่าตอบกลับ</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`[Email System] Accessory approval email sent successfully!`);
+  } catch (error) {
+    console.error('[Email System] Critical Error sending accessory approval email:', error);
+  }
+}
+
+/**
+ * Sends a rejection email for an accessory request to the borrower.
+ */
+async function sendAccessoryRejectionEmail(requestData, accessoryData, toEmail) {
+  console.log(`[Email System] Initiating accessory rejection email process for: ${accessoryData.name}`);
+
+  if (!process.env.SMTP_HOST) {
+    return;
+  }
+
+  const ccEmail = process.env.IT_DEPT_EMAIL || 'itsupport@aapico.com';
+  const recipient = toEmail || ccEmail;
+  const fromEmail = process.env.SMTP_USER || process.env.IT_DEPT_EMAIL || 'no-reply@aapico.com';
+
+  const mailOptions = {
+    from: `"IT Asset Hub" <${fromEmail}>`,
+    to: recipient,
+    subject: `[IT Asset Hub] แจ้งผลคำขอเบิกอุปกรณ์เสริม: ไม่อนุมัติ (${accessoryData.name})`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ผลการเบิกอุปกรณ์เสริม: ไม่อนุมัติ</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333333;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7f6; padding: 30px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #0c3365; padding: 30px; text-align: center; border-bottom: 4px solid #ef4444;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">AAPICO IT ASSET HUB</h1><br>
+              <h3 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 1px;">Notification : Accessory Request Rejected</h3>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #0c3365; margin-top: 0; font-size: 22px;">ไม่อนุมัติคำขอเบิกอุปกรณ์เสริม ❌</h2>
+              <p style="font-size: 16px; line-height: 1.6; color: #555555;">เรียน คุณ <strong>${requestData.full_name}</strong>,</p>
+              <p style="font-size: 16px; line-height: 1.6; color: #555555;">ระบบขอแจ้งให้ทราบว่าคำขอเบิกอุปกรณ์ของท่าน <strong>ไม่ได้รับการอนุมัติ</strong></p>
+              
+              <div style="background-color: #ffebee; border-left: 4px solid #d32f2f; padding: 15px 20px; margin-top: 20px; border-radius: 4px;">
+                <h4 style="margin: 0 0 10px 0; color: #d32f2f;">เหตุผลที่ไม่อนุมัติ:</h4>
+                <p style="margin: 0; font-size: 16px; color: #333;">${requestData.reject_reason || 'ไม่ระบุเหตุผล'}</p>
+              </div>
+
+              <table width="100%" border="0" cellspacing="0" cellpadding="14" style="margin-top: 25px; border-collapse: collapse; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;">
+                <tr>
+                  <td width="35%" style="border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #e21b22; background-color: #f8fafc;">อุปกรณ์ที่ขอเบิก</td>
+                  <td style="border-bottom: 1px solid #e0e0e0; color: #444444;"><strong>${accessoryData.name}</strong></td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #e21b22; background-color: #f8fafc;">จำนวน</td>
+                  <td style="border-bottom: 1px solid #e0e0e0; color: #444444;">${requestData.quantity} ชิ้น</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: 600; color: #e21b22; background-color: #f8fafc;">วัตถุประสงค์</td>
+                  <td style="color: #444444;">${requestData.borrow_purpose}</td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f4f7f6; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0; font-size: 12px; color: #888888;">นี่คืออีเมลอัตโนมัติจากระบบ IT Asset Hub กรุณาอย่าตอบกลับ</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`[Email System] Accessory rejection email sent successfully!`);
+  } catch (error) {
+    console.error('[Email System] Critical Error sending accessory rejection email:', error);
+  }
+}
+
 module.exports = {
   sendApprovalEmail,
-  sendRejectionEmail
+  sendRejectionEmail,
+  sendAccessoryApprovalEmail,
+  sendAccessoryRejectionEmail
 };

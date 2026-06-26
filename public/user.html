@@ -1132,24 +1132,31 @@
                             </div>
                         </div>
 
-                        <!-- Section 2: รายละเอียดการยืม -->
-                        <div class="form-section-card">
-                            <div class="form-section-title">
-                                <i class="fa-solid fa-calendar-days"></i> รายละเอียดการยืม
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group flex-1">
-                                    <label for="u-borrow-date">วันที่ต้องการยืม <span class="required">*</span></label>
-                                    <input type="datetime-local" id="u-borrow-date" class="glass-input" required>
+                            <!-- Section 2: รายละเอียดการยืม / เบิก -->
+                            <div class="form-section-card">
+                                <div class="form-section-title">
+                                    <i class="fa-solid fa-calendar-days"></i> รายละเอียดการยืม/เบิก
                                 </div>
-                                <div class="form-group flex-1">
-                                    <label for="u-return-date">กำหนดส่งคืน <span class="required">*</span></label>
-                                    <input type="date" id="u-return-date" class="glass-input" required>
-                                </div>
-                            </div>
 
-                            <div class="form-group">
+                                <div class="form-row computer-only-fields">
+                                    <div class="form-group flex-1">
+                                        <label for="u-borrow-date">วันที่ต้องการยืม <span class="required">*</span></label>
+                                        <input type="datetime-local" id="u-borrow-date" class="glass-input">
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <label for="u-return-date">กำหนดส่งคืน <span class="required">*</span></label>
+                                        <input type="date" id="u-return-date" class="glass-input">
+                                    </div>
+                                </div>
+
+                                <div class="form-row accessory-only-fields" style="display:none;">
+                                    <div class="form-group flex-1">
+                                        <label for="u-quantity">จำนวนที่ขอเบิก <span class="required">*</span></label>
+                                        <input type="number" id="u-quantity" class="glass-input" min="1" value="1">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
                                 <label for="u-purpose">วัตถุประสงค์ในการยืม / สถานที่ <span
                                         class="required">*</span></label>
                                 <textarea id="u-purpose" rows="4" class="glass-input"
@@ -1289,9 +1296,11 @@
         function getCategoryIcon(category) {
             if (!category) return 'fa-computer';
             const c = category.toLowerCase();
-            if (c.includes('laptop') || c.includes('notebook')) return 'fa-laptop';
-            if (c.includes('desktop')) return 'fa-desktop';
+            if (c.includes('laptop') || c.includes('notebook') || c.includes('โน๊ตบุ๊ค')) return 'fa-laptop';
+            if (c.includes('desktop') || c.includes('pc') || c.includes('พีซี')) return 'fa-desktop';
             if (c.includes('workstation')) return 'fa-server';
+            if (c.includes('mouse') || c.includes('เมาส์')) return 'fa-computer-mouse';
+            if (c.includes('keyboard') || c.includes('คีย์บอร์ด')) return 'fa-keyboard';
             return 'fa-computer';
         }
 
@@ -1317,16 +1326,22 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ========== LOAD AVAILABLE COMPUTERS ==========
+        // ========== LOAD AVAILABLE COMPUTERS / ACCESSORIES ==========
+
+        async function loadData() {
+            if (UserState.currentTab === 'computers') {
+                await loadAvailableComputers();
+            } else {
+                await loadAccessories();
+            }
+        }
 
         async function loadAvailableComputers() {
             try {
-                // เรียก /api/assets เพื่อให้ได้ข้อมูลจาก GLPI และ SQLite
                 const res = await fetch('/api/assets?usage_type=Rental');
                 if (!res.ok) throw new Error('API error ' + res.status);
                 const assets = await res.json();
 
-                // โหลด transactions แยกสำหรับแสดงข้อมูลผู้ยืมปัจจุบัน
                 const txRes = await fetch('/api/transactions');
                 if (txRes.ok) {
                     UserState.allTransactions = await txRes.json();
@@ -1336,18 +1351,109 @@
                 renderCategoryGroups(assets);
             } catch (err) {
                 console.error('Failed to load assets:', err);
-                showToast('ไม่สามารถดึงข้อมูลเครื่องคอมพิวเตอร์จากเซิร์ฟเวอร์ได้', 'danger');
-                document.getElementById('skeleton-grid').style.display = 'none';
-                const container = document.getElementById('category-sections-container');
-                container.style.display = 'block';
-                container.innerHTML = `
+                showErrorState();
+            }
+        }
+
+        async function loadAccessories() {
+            try {
+                const res = await fetch('/api/user/accessories');
+                if (!res.ok) throw new Error('API error ' + res.status);
+                const accessories = await res.json();
+                
+                renderAccessories(accessories);
+            } catch (err) {
+                console.error('Failed to load accessories:', err);
+                showErrorState();
+            }
+        }
+
+        function showErrorState() {
+            showToast('ไม่สามารถดึงข้อมูลจากเซิร์ฟเวอร์ได้', 'danger');
+            document.getElementById('skeleton-grid').style.display = 'none';
+            const container = document.getElementById('category-sections-container');
+            container.style.display = 'block';
+            container.innerHTML = `
                 <div class="empty-state">
                     <i class="fa-solid fa-triangle-exclamation" style="color: var(--color-danger); opacity: 1;"></i>
                     <h4>เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</h4>
                     <p>กรุณาติดต่อเจ้าหน้าที่ IT หรือลองใหม่อีกครั้ง</p>
                 </div>
             `;
+        }
+
+        function renderAccessories(accessories) {
+            const container = document.getElementById('category-sections-container');
+            const skeletonGrid = document.getElementById('skeleton-grid');
+            if (skeletonGrid) skeletonGrid.style.display = 'none';
+
+            container.style.display = 'block';
+            container.innerHTML = '';
+
+            if (accessories.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h4>ไม่มีอุปกรณ์เสริมในระบบ</h4>
+                </div>`;
+                return;
             }
+
+            const section = document.createElement('div');
+            section.className = 'category-section';
+            section.style.marginBottom = '40px';
+
+            section.innerHTML = `
+                <div class="available-header" style="border-bottom: 2px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 20px;">
+                    <h3><i class="fa-solid fa-keyboard" style="color: var(--color-primary); margin-right: 8px;"></i> อุปกรณ์ไอที (Accessories)</h3>
+                </div>
+                <div class="computers-grid"></div>
+            `;
+
+            const grid = section.querySelector('.computers-grid');
+
+            accessories.forEach(acc => {
+                const isAvailable = acc.available_stock > 0;
+                
+                const card = document.createElement('div');
+                card.className = 'computer-card';
+                card.dataset.id = acc.id;
+
+                if (!isAvailable) {
+                    card.style.opacity = '0.7';
+                    card.style.borderColor = 'var(--border-subtle)';
+                }
+
+                card.innerHTML = `
+                    <div class="card-icon-row">
+                        <div class="card-device-icon">
+                            <i class="fa-solid ${getCategoryIcon(acc.name)}"></i>
+                        </div>
+                        ${isAvailable
+                        ? `<span class="card-available-dot">ว่าง: ${acc.available_stock}</span>`
+                        : `<span class="card-available-dot" style="color:var(--color-danger);"><i class="fa-solid fa-xmark"></i> หมดชั่วคราว</span>`
+                        }
+                    </div>
+                    <div class="card-model">${acc.name}</div>
+                    
+                    ${isAvailable ? `
+                    <button class="card-select-btn" data-id="${acc.id}">
+                        <i class="fa-solid fa-hand-pointer"></i> เลือกอุปกรณ์นี้
+                    </button>` : ''}
+                `;
+
+                if (isAvailable) {
+                    card.querySelector('.card-select-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectAccessory(acc);
+                    });
+                    card.addEventListener('click', () => selectAccessory(acc));
+                }
+
+                grid.appendChild(card);
+            });
+
+            container.appendChild(section);
         }
 
         function renderCategoryGroups(assets) {
@@ -1361,38 +1467,17 @@
             let totalAvailable = 0;
             let totalRented = 0;
 
-            let categories = [];
-            
-            if (UserState.currentTab === 'computers') {
-                categories = [
-                    { id: 'notebook', name: 'Laptop / Notebook', match: ['laptop', 'notebook'] },
-                    { id: 'desktop', name: 'Desktop PC', match: ['desktop', 'pc'] },
-                    { id: 'workstation', name: 'Workstation', match: ['workstation'] }
-                ];
-            } else {
-                categories = [
-                    { id: 'mouse', name: 'Mouse (เมาส์)', match: ['mouse', 'เมาส์'] },
-                    { id: 'keyboard', name: 'Keyboard (คีย์บอร์ด)', match: ['keyboard', 'คีย์บอร์ด'] },
-                    { id: 'cable', name: 'Cable & Adapter (สายเคเบิล/อะแดปเตอร์)', match: ['cable', 'adapter', 'hdmi', 'vga', 'สาย'] },
-                    { id: 'monitor', name: 'Monitor (จอมอนิเตอร์)', match: ['monitor', 'display', 'จอ'] },
-                    { id: 'other', name: 'Other Accessories (อื่นๆ)', match: ['other', 'accessory', 'accessories', 'อุปกรณ์'] }
-                ];
-            }
+            const categories = [
+                { id: 'notebook', name: 'Laptop / Notebook', match: ['laptop', 'notebook'] },
+                { id: 'desktop', name: 'Desktop PC', match: ['desktop', 'pc'] },
+                { id: 'workstation', name: 'Workstation', match: ['workstation'] }
+            ];
 
             categories.forEach(cat => {
                 const catAssets = assets.filter(a => {
-                    // สำหรับ accessories, บางครั้งอาจไม่มี location ว่า IT Store ก็ได้ (เผื่อตั้งค่าผิด) แต่เรายึดตามหมวดหมู่หลักๆ หรือถ้าเป็น other ต้องไม่ match คอมพิวเตอร์
                     const c = (a.category || a.computertype || '').toLowerCase();
                     const loc = (a.location || '').toLowerCase();
                     const isItStore = loc.includes('it store');
-                    
-                    if (UserState.currentTab === 'accessories' && cat.id === 'other') {
-                        // For 'other', just catch anything that is NOT a computer and not matched by other accessory tabs
-                        const isComputer = ['laptop', 'notebook', 'desktop', 'pc', 'workstation'].some(m => c.includes(m));
-                        const isMatchedOtherAccessories = ['mouse', 'เมาส์', 'keyboard', 'คีย์บอร์ด', 'cable', 'adapter', 'hdmi', 'vga', 'สาย', 'monitor', 'display', 'จอ'].some(m => c.includes(m));
-                        return !isComputer && !isMatchedOtherAccessories && isItStore;
-                    }
-                    
                     return cat.match.some(m => c.includes(m)) && isItStore;
                 });
 
@@ -1586,6 +1671,44 @@
             threeDays.setDate(now.getDate() + 3);
             document.getElementById('u-return-date').value = threeDays.toISOString().split('T')[0];
 
+            document.querySelectorAll('.computer-only-fields').forEach(el => el.style.display = 'flex');
+            document.querySelectorAll('.accessory-only-fields').forEach(el => el.style.display = 'none');
+            document.getElementById('u-borrow-date').required = true;
+            document.getElementById('u-return-date').required = true;
+            document.getElementById('u-quantity').required = false;
+
+            // Go to step 2
+            setTimeout(() => goToStep(2), 200);
+        }
+
+        function selectAccessory(acc) {
+            UserState.selectedAsset = acc; // Using same variable
+
+            // Update card visual selection
+            document.querySelectorAll('.computer-card').forEach(c => {
+                c.classList.remove('selected');
+                const btn = c.querySelector('.card-select-btn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> เลือกอุปกรณ์นี้';
+            });
+            const selectedCard = document.querySelector(`.computer-card[data-id="${acc.id}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                const btn = selectedCard.querySelector('.card-select-btn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> เลือกแล้ว!';
+            }
+
+            // Populate form banner
+            document.getElementById('banner-model').textContent = acc.name;
+            document.getElementById('banner-tag').textContent = `เหลือ: ${acc.available_stock}`;
+            document.getElementById('banner-sn').textContent = '-';
+            document.getElementById('form-asset-id').value = acc.id;
+
+            document.querySelectorAll('.computer-only-fields').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.accessory-only-fields').forEach(el => el.style.display = 'flex');
+            document.getElementById('u-borrow-date').required = false;
+            document.getElementById('u-return-date').required = false;
+            document.getElementById('u-quantity').required = true;
+
             // Go to step 2
             setTimeout(() => goToStep(2), 200);
         }
@@ -1603,15 +1726,26 @@
             const borrowDate = document.getElementById('u-borrow-date').value;
             const returnDate = document.getElementById('u-return-date').value;
             const purpose = document.getElementById('u-purpose').value.trim();
+            const quantity = document.getElementById('u-quantity').value;
 
             // Client-side validation
-            if (!fullName || !empId || !dept || !borrowDate || !returnDate || !purpose) {
+            if (!fullName || !empId || !dept || !purpose) {
                 showToast('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ช่องที่มี *)', 'warning');
                 return;
             }
 
+            if (UserState.currentTab === 'computers' && (!borrowDate || !returnDate)) {
+                showToast('กรุณาระบุวันที่ต้องการยืม และกำหนดส่งคืน', 'warning');
+                return;
+            }
+
+            if (UserState.currentTab === 'accessories' && (!quantity || quantity < 1)) {
+                showToast('กรุณาระบุจำนวนที่ขอเบิกให้ถูกต้อง', 'warning');
+                return;
+            }
+
             if (!assetId || !UserState.selectedAsset) {
-                showToast('กรุณาเลือกเครื่องคอมพิวเตอร์ก่อนส่งฟอร์ม', 'warning');
+                showToast('กรุณาเลือกรายการก่อนส่งฟอร์ม', 'warning');
                 return;
             }
 
@@ -1621,23 +1755,39 @@
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
 
             try {
-                const res = await fetch('/api/borrow-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        asset_id: assetId,
-                        employee_id: empId,
-                        full_name: fullName,
-                        department: dept,
-                        title: document.getElementById('u-title').value.trim(),
-                        company: document.getElementById('u-company').value.trim(),
-                        contact_number: phone,
-                        borrow_date: borrowDate,
-                        expected_return_date: returnDate,
-                        borrow_purpose: purpose
-                        // borrow_by_staff_id ไม่ส่ง — server จะ default เป็น 'staff-admin'
-                    })
-                });
+                let res;
+                if (UserState.currentTab === 'computers') {
+                    res = await fetch('/api/borrow-request', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            asset_id: assetId,
+                            employee_id: empId,
+                            full_name: fullName,
+                            department: dept,
+                            title: document.getElementById('u-title').value.trim(),
+                            company: document.getElementById('u-company').value.trim(),
+                            contact_number: phone,
+                            borrow_date: borrowDate,
+                            expected_return_date: returnDate,
+                            borrow_purpose: purpose
+                        })
+                    });
+                } else {
+                    res = await fetch('/api/user/accessories/request', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            accessory_id: assetId,
+                            employee_id: empId,
+                            full_name: fullName,
+                            department: dept,
+                            quantity: quantity,
+                            borrow_purpose: purpose,
+                            contact_number: phone
+                        })
+                    });
+                }
 
                 const data = await res.json();
 
@@ -1646,11 +1796,19 @@
                 }
 
                 // Populate success screen
-                document.getElementById('sum-model').textContent = UserState.selectedAsset.model_name;
-                document.getElementById('sum-tag').textContent = UserState.selectedAsset.asset_tag;
+                if (UserState.currentTab === 'computers') {
+                    document.getElementById('sum-model').textContent = UserState.selectedAsset.model_name;
+                    document.getElementById('sum-tag').textContent = UserState.selectedAsset.asset_tag;
+                    document.getElementById('sum-return').textContent = formatDateOnly(returnDate);
+                    document.getElementById('sum-return').parentElement.style.display = 'flex';
+                } else {
+                    document.getElementById('sum-model').textContent = UserState.selectedAsset.name;
+                    document.getElementById('sum-tag').textContent = `จำนวน: ${quantity}`;
+                    document.getElementById('sum-return').parentElement.style.display = 'none';
+                }
+                
                 document.getElementById('sum-name').textContent = fullName;
                 document.getElementById('sum-dept').textContent = dept;
-                document.getElementById('sum-return').textContent = formatDateOnly(returnDate);
 
                 goToStep(3);
 
@@ -1678,7 +1836,7 @@
             btnAccessories.className = 'btn btn-secondary';
             btnAccessories.style.borderColor = 'transparent';
             
-            renderCategoryGroups(UserState.availableAssets);
+            loadData();
         });
 
         document.getElementById('tab-accessories').addEventListener('click', (e) => {
@@ -1694,7 +1852,7 @@
             btnComputers.className = 'btn btn-secondary';
             btnComputers.style.borderColor = 'transparent';
             
-            renderCategoryGroups(UserState.availableAssets);
+            loadData();
         });
 
         document.getElementById('btn-change-computer').addEventListener('click', () => goToStep(1));
@@ -1719,7 +1877,7 @@
             }
 
             goToStep(1);
-            loadAvailableComputers();
+            loadData();
         });
 
         // ========== QR SCAN URL HANDLING ==========
